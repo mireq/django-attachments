@@ -109,6 +109,9 @@ class Attachment(TimestampModelMixin, models.Model):
 		ordering = ('-library', 'rank')
 		index_together = (('library', 'rank',),)
 
+	def __str__(self):
+		return self.original_name
+
 	def _rank_queryset(self):
 		return Attachment.objects.filter(library=self.library).order_by('rank')
 

@@ -18,6 +18,7 @@ INSTALLED_APPS = [
 	'django_ajax_utils',
 	'django_attachments',
 	'easy_thumbnails',
+	'example',
 ]
 
 MIDDLEWARE = [

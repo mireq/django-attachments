@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+	<h2>Upload</h2>
+
+	<form action="{{ request.path }}" method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+		{{ upload_form.as_p }}
+		<input type="hidden" name="action" value="upload">
+		<button type="submit">Upload</button>
+	</form>
+
+	<h2>Change</h2>
+
+	<form action="{{ request.path }}" method="post">
+		{% csrf_token %}
+		{{ update_form.as_p }}
+		<input type="hidden" name="action" value="update">
+		<button type="submit">Change</button>
+	</form>
+
+{% endblock %}
