@@ -109,6 +109,9 @@ class Attachment(TimestampModelMixin, models.Model):
 		ordering = ('-library', 'rank')
 		index_together = (('library', 'rank',),)
 
+	def _rank_queryset(self):
+		return Attachment.objects.filter(library=self.library).order_by('rank')
+
 	def save(self, *args, **kwargs):
 		if not self.original_name:
 			self.original_name = self.file.name
@@ -116,7 +119,7 @@ class Attachment(TimestampModelMixin, models.Model):
 			self.original_name = self.original_name[:255]
 			self.mimetype = (mimetypes.guess_type(self.original_name)[0] or '')[:200]
 		if self.rank is None:
-			next_rank = Attachment.objects.filter(library=self.library).aggregate(max_rank=Max('rank'))['max_rank']
+			next_rank = self._rank_queryset().aggregate(max_rank=Max('rank'))['max_rank']
 			if next_rank is None:
 				next_rank = 0
 			else:
@@ -139,5 +142,5 @@ class Attachment(TimestampModelMixin, models.Model):
 		super(Attachment, self).save(*args, **kwargs)
 
 	def delete(self):
-		Attachment.objects.filter(library=self.library, rank__gt=self.rank).update(rank=F('rank')-1)
+		self._rank_queryset().filter(rank__gt=self.rank).update(rank=F('rank')-1)
 		super(Attachment, self).delete()

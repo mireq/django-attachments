@@ -51,3 +51,32 @@ class AttachmentModelTest(TestCase):
 		attachment = self.create_attachment('image.jpg', data.getvalue())
 		self.assertEquals(attachment.image_width, image_size[0])
 		self.assertEquals(attachment.image_height, image_size[1])
+
+	def test_rank_create_delete(self):
+		library = self.create_library()
+		attachments = [
+			self.create_attachment('upload.txt', b'', library),
+			self.create_attachment('upload.txt', b'', library),
+		]
+		self.assertEquals(attachments[0].rank, 0)
+		self.assertEquals(attachments[1].rank, 1)
+
+		# ranks from other library
+		library2 = self.create_library()
+		attachments2 = [
+			self.create_attachment('upload.txt', b'', library2),
+			self.create_attachment('upload.txt', b'', library2),
+		]
+		self.assertEquals(attachments2[0].rank, 0)
+		self.assertEquals(attachments2[1].rank, 1)
+
+		# change rank when delete
+		attachments[0].delete()
+		attachments[1].refresh_from_db()
+		self.assertEquals(attachments[1].rank, 0)
+		attachments.pop(0)
+		# preserve rank when delete last
+		attachments2[1].delete()
+		attachments2[0].refresh_from_db()
+		self.assertEquals(attachments2[0].rank, 0)
+		attachments2.pop(1)
