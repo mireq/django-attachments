@@ -125,6 +125,9 @@ class Attachment(TimestampModelMixin, models.Model):
 			else:
 				next_rank += 1
 			self.rank = next_rank
+		else:
+			if self.pk is None:
+				self._rank_queryset().filter(rank__gte=self.rank).update(rank=F('rank')+1)
 		if self.file:
 			self.filesize = self.file.size
 			source = BytesIO(self.file.read())
@@ -144,3 +147,13 @@ class Attachment(TimestampModelMixin, models.Model):
 	def delete(self):
 		self._rank_queryset().filter(rank__gt=self.rank).update(rank=F('rank')-1)
 		super(Attachment, self).delete()
+
+	def move_to(self, position):
+		if position == self.rank:
+			return
+		if self.rank > position:
+			self._rank_queryset().filter(rank__lt=self.rank, rank__gte=position).update(rank=F('rank')+1)
+		else:
+			self._rank_queryset().filter(rank__gt=self.rank, rank__lte=position).update(rank=F('rank')-1)
+		self.rank = position
+		self.save()

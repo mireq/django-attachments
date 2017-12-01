@@ -19,11 +19,11 @@ class AttachmentModelTest(TestCase):
 		library.save()
 		return library
 
-	def create_attachment(self, filename, data, library=None):
+	def create_attachment(self, filename, data, library=None, **kwargs):
 		if library == None:
 			library = self.create_library()
 		uploaded_file = SimpleUploadedFile(filename, data)
-		attachment = Attachment(file=uploaded_file, library=library)
+		attachment = Attachment(file=uploaded_file, library=library, **kwargs)
 		attachment.save()
 		return attachment
 
@@ -51,6 +51,7 @@ class AttachmentModelTest(TestCase):
 		attachment = self.create_attachment('image.jpg', data.getvalue())
 		self.assertEquals(attachment.image_width, image_size[0])
 		self.assertEquals(attachment.image_height, image_size[1])
+		attachment.delete()
 
 	def test_rank_create_delete(self):
 		library = self.create_library()
@@ -80,3 +81,55 @@ class AttachmentModelTest(TestCase):
 		attachments2[0].refresh_from_db()
 		self.assertEquals(attachments2[0].rank, 0)
 		attachments2.pop(1)
+
+		# insert at specific position
+		attachment = self.create_attachment('upload.txt', b'', library, rank=0)
+		attachments[0].refresh_from_db()
+		attachments.insert(0, attachment)
+		self.assertEquals(attachments[0].rank, 0)
+		self.assertEquals(attachments[1].rank, 1)
+
+		attachments[0].delete()
+		attachments[1].delete()
+		attachments2[0].delete()
+
+	def test_rank_move(self):
+		library = self.create_library()
+		count = 5
+		attachments = []
+		result_order = list(range(5))
+		for i in range(count):
+			attachments.append(self.create_attachment('upload.txt', b'', library))
+
+		for i in range(count):
+			attachments[i].refresh_from_db()
+			self.assertEquals(attachments[i].rank, result_order[i])
+
+		attachments[2].move_to(2) # position not changed
+
+		for i in range(count):
+			attachments[i].refresh_from_db()
+			self.assertEquals(attachments[i].rank, result_order[i])
+
+		attachments[3].move_to(1)
+		result_order = [0, 2, 3, 1, 4]
+
+		for i in range(count):
+			attachments[i].refresh_from_db()
+			self.assertEquals(attachments[i].rank, result_order[i])
+			# reset
+			attachments[i].rank = i
+			attachments[i].save()
+
+		attachments[1].move_to(3)
+		result_order = [0, 3, 1, 2, 4]
+
+		for i in range(count):
+			attachments[i].refresh_from_db()
+			self.assertEquals(attachments[i].rank, result_order[i])
+			# reset
+			attachments[i].rank = i
+			attachments[i].save()
+
+		for i in range(count):
+			attachments[i].delete()
