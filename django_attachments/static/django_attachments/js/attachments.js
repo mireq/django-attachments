@@ -69,6 +69,15 @@ if (_.forEach === undefined) {
 			}
 		};
 	}
+
+	_.forEachDict = function(collection, fn) {
+		for (var key in collection) {
+			if (Object.prototype.hasOwnProperty.call(collection, key)) {
+				var value = collection[key];
+				fn(key, value);
+			}
+		}
+	};
 }
 
 
@@ -89,16 +98,40 @@ if (_.xhrSend === undefined) {
 		createXMLHttpRequest = function() { return new ActiveXObject('Microsoft.XMLHTTP'); };
 	}
 
+	var dictToPairs = function(collection) {
+		var pairs = [];
+		_.forEachDict(collection, function(key, value) {
+			pairs.push([key, value]);
+		});
+		return pairs;
+	};
+
+	var encodeURLParameters = function(parameters) {
+		var urlParameterList = parameters;
+		if (!Array.isArray(parameters)) {
+			urlParameterList = dictToPairs(urlParameterList);
+		}
+
+		var urlComponents = [];
+		_.forEach(urlParameterList, function(parameter) {
+			urlComponents.push(encodeURIComponent(parameter[0]) + '=' + encodeURIComponent(parameter[1]));
+		});
+		return urlComponents.join('&');
+	};
+
 	var xhrSend = function(options) {
 		options.method = options.method || 'GET';
 		var req = createXMLHttpRequest();
 		var extraHeaders = options.extraHeaders || {};
 		if (window._settings && window._settings.debug) {
-			options.failFn = opts.failFn || ajaxForwardError;
+			options.failFn = options.failFn || ajaxForwardError;
 		}
 		req.open(options.method, options.url, true);
 		req.setRequestHeader('X-CSRFToken', _.getCookie('csrftoken'));
 		req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+		if (options.method === 'POST') {
+			req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		}
 
 		req.onreadystatechange = function () {
 			if (req.readyState === 2) {
@@ -123,7 +156,11 @@ if (_.xhrSend === undefined) {
 				}
 			}
 		};
-		req.send();
+		var data = options.data || '';
+		if (typeof data != 'string') {
+			data = encodeURLParameters(data);
+		}
+		req.send(data);
 	}
 	_.xhrSend = xhrSend;
 }
@@ -202,6 +239,21 @@ var uploadWidget = function(element, options) {
 			return;
 		}
 
+		var target = e.target;
+		if (target.className.indexOf('delete-link') !== -1) {
+			var id = target.getAttribute('data-id');
+			_.xhrSend({
+				method: 'POST',
+				data: {'action': 'delete', 'delete': id, 'attachments': 'json'},
+				url: self.updateUrl,
+				successFn: function(data) {
+					renderAttachments(data);
+				}
+			})
+			e.preventDefault();
+			return;
+		}
+
 		_.triggerEvent(widgetElement, 'click')
 		element.click();
 	}
@@ -255,6 +307,15 @@ var uploadWidget = function(element, options) {
 		caption.appendChild(captionSpan);
 		captionSpan.appendChild(document.createTextNode(attachmentData.name));
 
+		if (self.updateUrl !== null && attachmentData.id !== undefined) {
+			var link = document.createElement('A');
+			link.innerHTML = 'Delete';
+			link.setAttribute('href', '#');
+			link.setAttribute('data-id', attachmentData.id);
+			link.className = 'delete delete-link';
+			frame.appendChild(link);
+		}
+
 		return {
 			element: attachment,
 			updateProgress: function(value) {
@@ -290,8 +351,9 @@ var uploadWidget = function(element, options) {
 
 		_.forEach(data, function(attachmentData) {
 			insertAttachment(self.makeAttachmentWidget({
-				'thumbnail': attachmentData['thumbnail'],
-				'name': attachmentData['name'],
+				'thumbnail': attachmentData.thumbnail,
+				'name': attachmentData.name,
+				'id': attachmentData.id,
 				'finished': true
 			}).element);
 		});

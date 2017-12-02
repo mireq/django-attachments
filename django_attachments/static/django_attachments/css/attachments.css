@@ -72,3 +72,14 @@
 	height: 3px;
 	background: #22aaee;
 }
+
+.attachments-widget .delete {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	overflow: hidden;
+	text-indent: -9999px;
+	width: 16px;
+	height: 16px;
+	background: url('../img/trashcan.png') no-repeat top left;
+}

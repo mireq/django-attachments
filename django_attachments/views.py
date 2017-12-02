@@ -87,6 +87,9 @@ class AttachmentEditableMixin(object):
 					attachment.delete()
 					library.refresh_from_db()
 					self.update_primary_attachment()
+			if self.request.POST.get('attachments') == 'json':
+				return self.render_json_attachments()
+			return HttpResponseRedirect(self.request.get_full_path())
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
 	def upload_form_valid(self):
