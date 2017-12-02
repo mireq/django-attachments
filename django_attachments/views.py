@@ -77,6 +77,8 @@ class AttachmentEditableMixin(object):
 
 	def upload_form_valid(self):
 		self.upload_form.save()
+		if self.request.POST.get('attachments') == 'json':
+			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def upload_form_invalid(self):
@@ -84,6 +86,8 @@ class AttachmentEditableMixin(object):
 
 	def update_form_valid(self):
 		self.update_form.save()
+		if self.request.POST.get('attachments') == 'json':
+			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def update_form_invalid(self):
@@ -91,8 +95,7 @@ class AttachmentEditableMixin(object):
 
 	def get(self, request, *args, **kwargs):
 		if request.GET.get('attachments') == 'json':
-			gallery = json.dumps(self.serialize_attachemnts())
-			return HttpResponse(gallery, 'application/json')
+			return self.render_json_attachments()
 		return super(AttachmentEditableMixin, self).get(request, *args, **kwargs)
 
 	def serialize_attachemnts(self):
@@ -115,3 +118,7 @@ class AttachmentEditableMixin(object):
 					attachment_data[key] = thumbnailer.get_thumbnail(options).url
 			attachments_data.append(attachment_data)
 		return attachments_data
+
+	def render_json_attachments(self):
+		attachments = json.dumps(self.serialize_attachemnts())
+		return HttpResponse(attachments, 'application/json')

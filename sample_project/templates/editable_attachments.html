@@ -2,7 +2,7 @@
 
 {% block body %}
 
-	<div class="attachments-upload-widget">
+	<div class="attachments-upload-widget" data-list-url="{{ request.path }}?attachments=json" data-upload-url="{{ request.path }}" data-update-url="{{ request.path }}">
 
 		<h2>Upload</h2>
 
