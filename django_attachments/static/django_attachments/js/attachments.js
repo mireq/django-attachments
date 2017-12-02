@@ -214,13 +214,22 @@ var uploadWidget = function(element, options) {
 		_.unbindEvent(files, 'click', onClicked);
 	}
 
-	options.renderAttachment = options.renderAttachment || function(attachmentData) {
+	options.makeAttachmentWidget = options.makeAttachmentWidget || function(attachmentData) {
+		/*
+		 * Returns dictionary:
+		 *
+		 * {
+		 *   element: html_element,
+		 *   updateProgress: function
+		 * }
+		 */
 		var attachment = document.createElement('DIV');
 		if (attachmentData.finished) {
 			attachment.className = 'attachment attachment-finished';
 		}
 		else {
 			attachment.className = 'attachment attachment-uploading';
+			attachment.setAttribute('data-uploading', 'data-uploading');
 		}
 		var frame = document.createElement('DIV');
 		frame.className = 'attachment-frame';
@@ -230,16 +239,34 @@ var uploadWidget = function(element, options) {
 		frame.appendChild(thumbnail);
 		if (attachmentData['thumbnail'] !== undefined) {
 			var img = document.createElement('IMG');
-			frame.appendChild(img);
+			thumbnail.appendChild(img);
 			img.setAttribute('src', attachmentData['thumbnail']);
 		}
-		return attachment;
+
+		var caption = document.createElement('DIV');
+		caption.className = 'caption';
+		frame.appendChild(caption);
+
+		var progress = document.createElement('DIV');
+		progress.className = 'progress';
+		caption.appendChild(progress);
+
+		var captionSpan = document.createElement('SPAN');
+		caption.appendChild(captionSpan);
+		captionSpan.appendChild(document.createTextNode(attachmentData.name));
+
+		return {
+			element: attachment,
+			updateProgress: function(value) {
+				progress.style.width = value + '%';
+			}
+		}
 	}
 
 	var renderAttachments = function(data) {
 		var toRemove = [];
 		_.forEach(files.childNodes, function(node) {
-			if (node.getAttribute('data-uploading') !== null) {
+			if (node.getAttribute('data-uploading') === null) {
 				toRemove.push(node);
 			}
 		});
@@ -262,15 +289,16 @@ var uploadWidget = function(element, options) {
 		}
 
 		_.forEach(data, function(attachmentData) {
-			insertAttachment(options.renderAttachment({
+			insertAttachment(options.makeAttachmentWidget({
 				'thumbnail': attachmentData['thumbnail'],
+				'name': attachmentData['name'],
 				'finished': true
-			}));
+			}).element);
 		});
 	};
 
 	var createDropzone = function() {
-		return new Dropzone(widgetElement, {
+		var dropzone = new Dropzone(widgetElement, {
 			url: uploadUrl,
 			paramName: 'file',
 			clickable: true,
@@ -282,10 +310,12 @@ var uploadWidget = function(element, options) {
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
 			},
 			uploadprogress: function(upload, progress) {
-				console.log(upload.previewElement);
+				upload.previewElement.updateProgress(progress);
 			},
 			success: function(upload, data) {
 				renderAttachments(data);
+				upload.previewElement.element.parentNode.removeChild(upload.previewElement.element);
+				upload.previewElement = undefined;
 			},
 			queuecomplete: function() {
 			},
@@ -293,12 +323,12 @@ var uploadWidget = function(element, options) {
 				dropzone.options.autoProcessQueue = true;
 			},
 			addedfile: function(upload) {
-				upload.previewElement = files.appendChild(options.renderAttachment({
+				upload.previewElement = options.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
+					'name': upload.name,
 					'finished': false
-				}));
-				files.appendChild(upload.previewElement);
-				return;
+				});
+				files.appendChild(upload.previewElement.element);
 
 				if (dropzone.options.autoProcessQueue) {
 					return;
@@ -306,15 +336,17 @@ var uploadWidget = function(element, options) {
 				setTimeout(function() { dropzone.processQueue(); }, 0);
 			},
 			thumbnail: function(upload, dataURL) {
-				var oldPreview = upload.previewElement;
-				upload.previewElement = files.appendChild(options.renderAttachment({
+				var oldPreview = upload.previewElement.element;
+				upload.previewElement = options.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
+					'name': upload.name,
 					'finished': false
-				}));
-				oldPreview.parentNode.insertBefore(upload.previewElement, oldPreview);
+				});
+				oldPreview.parentNode.insertBefore(upload.previewElement.element, oldPreview);
 				oldPreview.parentNode.removeChild(oldPreview);
 			}
 		});
+		return dropzone;
 	}
 
 	_.xhrSend({
