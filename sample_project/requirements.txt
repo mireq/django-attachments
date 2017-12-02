@@ -1,3 +1,2 @@
--e git+https://github.com/mireq/django-ajax-utils.git@5f13c8d2082b316851782366f290826f4f7b95f8#egg=django_ajax_utils
 django==1.11.7
 easy-thumbnails==2.5

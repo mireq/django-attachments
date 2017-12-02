@@ -15,7 +15,6 @@ INSTALLED_APPS = [
 	'django.contrib.sessions',
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
-	'django_ajax_utils',
 	'django_attachments',
 	'easy_thumbnails',
 	'example',
@@ -29,8 +28,6 @@ MIDDLEWARE = [
 	'django.contrib.auth.middleware.AuthenticationMiddleware',
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.clickjacking.XFrameOptionsMiddleware',
-	'django_ajax_utils.middleware.RemoveDummyParametersMiddleware',
-	'django_ajax_utils.pjax.Middleware',
 ]
 
 ROOT_URLCONF = 'web.urls'

@@ -1,0 +1,9 @@
+.attachments-widget {
+	margin: 4px;
+	padding: 10px 10px 100px 10px;
+	text-align: center;
+	border: 2px dashed #eeeeee;
+	border-radius: 5px;
+	background: url('../img/upload.png') no-repeat center bottom 10px;
+	background-size: 64px 64px;
+}

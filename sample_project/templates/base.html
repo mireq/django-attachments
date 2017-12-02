@@ -3,9 +3,16 @@
 <head>
 	<title>{% block head_title %}title{% endblock %}</title>
 	<meta charset="utf-8" />
+	<link rel="stylesheet" href="{% static "django_attachments/css/attachments.css" %}" type="text/css" media="all" />
 </head>
 <body>
 {% block body %}
+{% endblock %}
+
+<script src="{% static "django_attachments/vendor/dropzone/dropzone.min.js" %}"></script>
+<script src="{% static "django_attachments/js/attachments.js" %}"></script>
+
+{% block extrajs %}
 {% endblock %}
 </body>
 </html>
