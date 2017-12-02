@@ -179,11 +179,11 @@ var uploadWidget = function(element, options) {
 	self.destroy = function() {};
 	options = options || {};
 
-	var listUrl = element.getAttribute('data-list-url');
-	var uploadUrl = element.getAttribute('data-upload-url');
-	var updateUrl = element.getAttribute('data-update-url');
+	self.listUrl = element.getAttribute('data-list-url');
+	self.uploadUrl = element.getAttribute('data-upload-url');
+	self.updateUrl = element.getAttribute('data-update-url');
 
-	if (listUrl === null) {
+	if (self.listUrl === null) {
 		return self;
 	}
 
@@ -214,7 +214,7 @@ var uploadWidget = function(element, options) {
 		_.unbindEvent(files, 'click', onClicked);
 	}
 
-	options.makeAttachmentWidget = options.makeAttachmentWidget || function(attachmentData) {
+	self.makeAttachmentWidget = function(attachmentData) {
 		/*
 		 * Returns dictionary:
 		 *
@@ -289,7 +289,7 @@ var uploadWidget = function(element, options) {
 		}
 
 		_.forEach(data, function(attachmentData) {
-			insertAttachment(options.makeAttachmentWidget({
+			insertAttachment(self.makeAttachmentWidget({
 				'thumbnail': attachmentData['thumbnail'],
 				'name': attachmentData['name'],
 				'finished': true
@@ -299,7 +299,7 @@ var uploadWidget = function(element, options) {
 
 	var createDropzone = function() {
 		var dropzone = new Dropzone(widgetElement, {
-			url: uploadUrl,
+			url: self.uploadUrl,
 			paramName: 'file',
 			clickable: true,
 			autoProcessQueue: false,
@@ -310,12 +310,13 @@ var uploadWidget = function(element, options) {
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
 			},
 			uploadprogress: function(upload, progress) {
-				upload.previewElement.updateProgress(progress);
+				upload.previewWidget.updateProgress(progress);
 			},
 			success: function(upload, data) {
 				renderAttachments(data);
-				upload.previewElement.element.parentNode.removeChild(upload.previewElement.element);
+				upload.previewElement.parentNode.removeChild(upload.previewElement);
 				upload.previewElement = undefined;
+				upload.previewWidget = undefined;
 			},
 			queuecomplete: function() {
 			},
@@ -323,12 +324,14 @@ var uploadWidget = function(element, options) {
 				dropzone.options.autoProcessQueue = true;
 			},
 			addedfile: function(upload) {
-				upload.previewElement = options.makeAttachmentWidget({
+				upload.previewWidget = self.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
 					'name': upload.name,
-					'finished': false
+					'finished': false,
+					'upload': upload
 				});
-				files.appendChild(upload.previewElement.element);
+				upload.previewElement = upload.previewWidget.element;
+				files.appendChild(upload.previewElement);
 
 				if (dropzone.options.autoProcessQueue) {
 					return;
@@ -336,13 +339,14 @@ var uploadWidget = function(element, options) {
 				setTimeout(function() { dropzone.processQueue(); }, 0);
 			},
 			thumbnail: function(upload, dataURL) {
-				var oldPreview = upload.previewElement.element;
-				upload.previewElement = options.makeAttachmentWidget({
+				var oldPreview = upload.previewElement;
+				upload.previewWidget = self.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
 					'name': upload.name,
 					'finished': false
 				});
-				oldPreview.parentNode.insertBefore(upload.previewElement.element, oldPreview);
+				upload.previewElement = upload.previewWidget.element;
+				oldPreview.parentNode.insertBefore(upload.previewElement, oldPreview);
 				oldPreview.parentNode.removeChild(oldPreview);
 			}
 		});
@@ -350,10 +354,10 @@ var uploadWidget = function(element, options) {
 	}
 
 	_.xhrSend({
-		url: listUrl,
+		url: self.listUrl,
 		successFn: function(data) {
 			renderAttachments(data);
-			if (uploadUrl) {
+			if (self.uploadUrl) {
 				createDropzone();
 			}
 		}

@@ -63,20 +63,35 @@ class AttachmentEditableMixin(object):
 		return ctx
 
 	def post(self, request, *args, **kwargs):
-		if self.request.POST.get('action') == 'upload' and self.upload_form:
+		action = self.request.POST.get('action')
+		if action == 'upload' and self.upload_form:
 			if self.upload_form.is_valid():
 				return self.upload_form_valid()
 			else:
 				return self.upload_form_invalid()
-		if self.request.POST.get('action') == 'update' and self.upload_form:
+		if action == 'update' and self.upload_form:
 			if self.update_form.is_valid():
 				return self.update_form_valid()
 			else:
 				return self.update_form_invalid()
+		if action == 'delete' and self.can_update_attachment():
+			pk = None
+			try:
+				pk = int(self.request.POST.get('delete', ''))
+			except ValueError:
+				pass
+			if pk is not None:
+				library = self.get_library()
+				attachment = library.attachment_set.filter(pk=pk).first()
+				if attachment:
+					attachment.delete()
+					library.refresh_from_db()
+					self.update_primary_attachment()
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
 	def upload_form_valid(self):
 		self.upload_form.save()
+		self.update_primary_attachment()
 		if self.request.POST.get('attachments') == 'json':
 			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
@@ -86,6 +101,7 @@ class AttachmentEditableMixin(object):
 
 	def update_form_valid(self):
 		self.update_form.save()
+		self.update_primary_attachment()
 		if self.request.POST.get('attachments') == 'json':
 			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
@@ -122,3 +138,10 @@ class AttachmentEditableMixin(object):
 	def render_json_attachments(self):
 		attachments = json.dumps(self.serialize_attachemnts())
 		return HttpResponse(attachments, 'application/json')
+
+	def update_primary_attachment(self):
+		library = self.get_library()
+		first_attachment = library.attachment_set.order_by('rank').first()
+		if library.primary_attachment != first_attachment:
+			library.primary_attachment = first_attachment
+			library.save()
