@@ -112,8 +112,9 @@ class Attachment(TimestampModelMixin, models.Model):
 	def __str__(self):
 		return self.original_name
 
-	def _rank_queryset(self):
-		return Attachment.objects.filter(library=self.library).order_by('rank')
+	@property
+	def is_image(self):
+		return self.image_width is not None
 
 	def save(self, *args, **kwargs):
 		if not self.original_name:
@@ -160,3 +161,6 @@ class Attachment(TimestampModelMixin, models.Model):
 			self._rank_queryset().filter(rank__gt=self.rank, rank__lte=position).update(rank=F('rank')-1)
 		self.rank = position
 		self.save()
+
+	def _rank_queryset(self):
+		return Attachment.objects.filter(library=self.library).order_by('rank')

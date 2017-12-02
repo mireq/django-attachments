@@ -3,14 +3,19 @@ from __future__ import unicode_literals
 
 from django.http.response import HttpResponseRedirect
 from django.utils.functional import cached_property
-from django_ajax_utils.views import JsonResponseMixin
+from django.http import HttpResponse
+from easy_thumbnails.files import get_thumbnailer
 
+import json
 from .forms import AttachmentUploadForm, AttachmentUpdateFormSet
 
 
-class AttachmentEditableMixin(JsonResponseMixin):
+class AttachmentEditableMixin(object):
 	upload_form_class = AttachmentUploadForm
 	update_form_class = AttachmentUpdateFormSet
+	thumbnail_options = {
+		'200_150': {'crop': True, 'size': (200, 150)},
+	}
 
 	def can_upload_attachment(self):
 		return True
@@ -83,3 +88,30 @@ class AttachmentEditableMixin(JsonResponseMixin):
 
 	def update_form_invalid(self):
 		return self.render_to_response(self.get_context_data())
+
+	def get(self, request, *args, **kwargs):
+		if request.GET.get('attachments') == 'json':
+			gallery = json.dumps(self.serialize_attachemnts())
+			return HttpResponse(gallery, 'application/json')
+		return super(AttachmentEditableMixin, self).get(request, *args, **kwargs)
+
+	def serialize_attachemnts(self):
+		attachments = self.get_library().attachment_set.all()
+		attachments_data = []
+		for attachment in attachments:
+			attachment_data = {
+				'id': attachment.pk,
+				'name': attachment.original_name,
+				'rank': attachment.rank,
+				'filesize': attachment.filesize,
+				'mimetype': attachment.mimetype,
+			}
+			if attachment.is_image:
+				attachment_data['image_width'] = attachment.image_width
+				attachment_data['image_height'] = attachment.image_height
+				thumbnails = {}
+				thumbnailer = get_thumbnailer(attachment.file)
+				for key, options in self.thumbnail_options.items():
+					attachment_data[key] = thumbnailer.get_thumbnail(options).url
+			attachments_data.append(attachment_data)
+		return attachments_data
