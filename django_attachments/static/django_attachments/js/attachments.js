@@ -129,15 +129,59 @@ if (_.xhrSend === undefined) {
 }
 
 
+if (_.bindEvent === undefined) {
+	_.bindEvent = function(element, name, fn) {
+		if (document.addEventListener) {
+			element.addEventListener(name, fn, false);
+		}
+		else {
+			element.attachEvent('on' + name, fn);
+		}
+	};
+
+	_.unbindEvent = function(element, name, fn) {
+		if (document.removeEventListener) {
+			element.removeEventListener(name, fn, false);
+		}
+		else {
+			element.detachEvent('on' + name, fn);
+		}
+	};
+
+	_.triggerEvent = function(element, name, memo) {
+		var event;
+		if (document.createEvent) {
+			event = document.createEvent('HTMLEvents');
+			event.initEvent(name, true, true);
+		}
+		else {
+			event = document.createEventObject();
+			event.eventType = name;
+		}
+
+		event.eventName = name;
+		event.memo = memo || { };
+		event.target = element;
+
+		if (document.createEvent) {
+			element.dispatchEvent(event);
+		}
+		else {
+			element.fireEvent("on" + event.eventType, event);
+		}
+	};
+}
+
+
 var uploadWidget = function(element, options) {
 	var self = {};
 	self.initialized = false;
 	self.destroy = function() {};
+	options = options || {};
 
 	var listUrl = element.getAttribute('data-list-url');
 	var uploadUrl = element.getAttribute('data-upload-url');
 	var updateUrl = element.getAttribute('data-update-url');
-
 
 	if (listUrl === null) {
 		return self;
@@ -153,9 +197,43 @@ var uploadWidget = function(element, options) {
 	files.className = 'files';
 	widgetElement.appendChild(files);
 
+	var onClicked = function(e) {
+		if (e.which !== 1) {
+			return;
+		}
+
+		_.triggerEvent(widgetElement, 'click')
+		element.click();
+	}
+
+	_.bindEvent(files, 'click', onClicked);
+
 	self.destroy = function() {
 		widgetElement.parentNode.removeChild(widgetElement);
 		element.style.display = 'block';
+		_.unbindEvent(files, 'click', onClicked);
+	}
+
+	options.renderAttachment = options.renderAttachment || function(attachmentData) {
+		var attachment = document.createElement('DIV');
+		if (attachmentData.finished) {
+			attachment.className = 'attachment attachment-finished';
+		}
+		else {
+			attachment.className = 'attachment attachment-uploading';
+		}
+		var frame = document.createElement('DIV');
+		frame.className = 'attachment-frame';
+		attachment.appendChild(frame);
+		var thumbnail = document.createElement('DIV');
+		thumbnail.className = 'thumbnail';
+		frame.appendChild(thumbnail);
+		if (attachmentData['thumbnail'] !== undefined) {
+			var img = document.createElement('IMG');
+			frame.appendChild(img);
+			img.setAttribute('src', attachmentData['thumbnail']);
+		}
+		return attachment;
 	}
 
 	var renderAttachments = function(data) {
@@ -184,21 +262,10 @@ var uploadWidget = function(element, options) {
 		}
 
 		_.forEach(data, function(attachmentData) {
-			var attachment = document.createElement('DIV');
-			attachment.className = 'attachment attachment-finished';
-			var frame = document.createElement('DIV');
-			frame.className = 'attachment-frame';
-			attachment.appendChild(frame);
-			var thumbnail = document.createElement('DIV');
-			thumbnail.className = 'thumbnail';
-			frame.appendChild(thumbnail);
-			if (attachmentData['200_150'] !== undefined) {
-				var img = document.createElement('IMG');
-				frame.appendChild(img);
-				img.setAttribute('src', attachmentData['200_150']);
-			}
-
-			insertAttachment(attachment);
+			insertAttachment(options.renderAttachment({
+				'thumbnail': attachmentData['thumbnail'],
+				'finished': true
+			}));
 		});
 	};
 
@@ -209,15 +276,6 @@ var uploadWidget = function(element, options) {
 			clickable: true,
 			autoProcessQueue: false,
 			addRemoveLinks: true,
-			previewTemplate: '\
-<div class="attachment attachment-uploading" data-uploading>\
-	<div class="attachment-frame">\
-		<div class="progress"><span class="upload" data-dz-uploadprogress></span></div>\
-		<div class="thumbnail">\
-			<img data-dz-thumbnail />\
-		</div>\
-	</div>\
-</div>',
 			sending: function(file, xhr, formData) {
 				formData.append('action', 'upload');
 				formData.append('attachments', 'json');
@@ -235,12 +293,26 @@ var uploadWidget = function(element, options) {
 				dropzone.options.autoProcessQueue = true;
 			},
 			addedfile: function(upload) {
-				upload.previewElement = Dropzone.createElement(this.options.previewTemplate);
+				upload.previewElement = files.appendChild(options.renderAttachment({
+					'thumbnail': upload.dataURL,
+					'finished': false
+				}));
 				files.appendChild(upload.previewElement);
+				return;
+
 				if (dropzone.options.autoProcessQueue) {
 					return;
 				}
 				setTimeout(function() { dropzone.processQueue(); }, 0);
+			},
+			thumbnail: function(upload, dataURL) {
+				var oldPreview = upload.previewElement;
+				upload.previewElement = files.appendChild(options.renderAttachment({
+					'thumbnail': upload.dataURL,
+					'finished': false
+				}));
+				oldPreview.parentNode.insertBefore(upload.previewElement, oldPreview);
+				oldPreview.parentNode.removeChild(oldPreview);
 			}
 		});
 	}

@@ -14,7 +14,7 @@ class AttachmentEditableMixin(object):
 	upload_form_class = AttachmentUploadForm
 	update_form_class = AttachmentUpdateFormSet
 	thumbnail_options = {
-		'200_150': {'crop': True, 'size': (200, 150)},
+		'thumbnail': {'crop': True, 'size': (200, 150)},
 	}
 
 	def can_upload_attachment(self):
