@@ -215,6 +215,9 @@ var uploadWidget = function(element, options) {
 	self.initialized = false;
 	self.destroy = function() {};
 	options = options || {};
+	if (options.autoProcess === undefined) {
+		options.autoProcess = true;
+	}
 
 	self.listUrl = element.getAttribute('data-list-url');
 	self.uploadUrl = element.getAttribute('data-upload-url');
@@ -383,7 +386,9 @@ var uploadWidget = function(element, options) {
 			queuecomplete: function() {
 			},
 			processing: function() {
-				dropzone.options.autoProcessQueue = true;
+				if (options.autoProcess) {
+					dropzone.options.autoProcessQueue = true;
+				}
 			},
 			addedfile: function(upload) {
 				upload.previewWidget = self.makeAttachmentWidget({
@@ -398,7 +403,9 @@ var uploadWidget = function(element, options) {
 				if (dropzone.options.autoProcessQueue) {
 					return;
 				}
-				setTimeout(function() { dropzone.processQueue(); }, 0);
+				if (options.autoProcess) {
+					setTimeout(function() { dropzone.processQueue(); }, 0);
+				}
 			},
 			thumbnail: function(upload, dataURL) {
 				var oldPreview = upload.previewElement;
@@ -429,7 +436,7 @@ var uploadWidget = function(element, options) {
 };
 
 
-uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0]);
+uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: false});
 
 
 }());
