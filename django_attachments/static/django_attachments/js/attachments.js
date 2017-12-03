@@ -237,6 +237,9 @@ var uploadWidget = function(element, options) {
 	files.className = 'files';
 	widgetElement.appendChild(files);
 
+	var dropzone;
+	var sortable;
+
 	var onClicked = function(e) {
 		if (e.which !== 1) {
 			return;
@@ -264,6 +267,11 @@ var uploadWidget = function(element, options) {
 	_.bindEvent(files, 'click', onClicked);
 
 	self.destroy = function() {
+		if (sortable !== undefined) {
+			sortable.destroy();
+			sortable = undefined;
+		}
+		dropzone = undefined;
 		widgetElement.parentNode.removeChild(widgetElement);
 		element.style.display = 'block';
 		_.unbindEvent(files, 'click', onClicked);
@@ -373,6 +381,7 @@ var uploadWidget = function(element, options) {
 				formData.append('action', 'upload');
 				formData.append('attachments', 'json');
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
+				console.log(file);
 			},
 			uploadprogress: function(upload, progress) {
 				upload.previewWidget.updateProgress(progress);
@@ -420,14 +429,32 @@ var uploadWidget = function(element, options) {
 			}
 		});
 		return dropzone;
-	}
+	};
+
+	var createSortable = function() {
+		var sortable = Sortable.create(files, {
+			animation: 200,
+			onSort: function() {
+				sortable.option("disabled", true);
+				sortable.option("disabled", false);
+			},
+			onStart: function() {
+			},
+			onEnd: function() {
+			}
+		});
+		return sortable;
+	};
 
 	_.xhrSend({
 		url: self.listUrl,
 		successFn: function(data) {
 			renderAttachments(data);
+			if (self.updateUrl) {
+				sortable = createSortable();
+			}
 			if (self.uploadUrl) {
-				createDropzone();
+				dropzone = createDropzone();
 			}
 		}
 	})
