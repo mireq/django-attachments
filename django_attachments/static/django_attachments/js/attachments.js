@@ -1,5 +1,9 @@
 (function() {
 
+
+/* === Utils === */
+
+
 window._utils = window._utils || {};
 var _ = window._utils;
 var el = document.createElement('DIV');
@@ -161,7 +165,7 @@ if (_.xhrSend === undefined) {
 			data = encodeURLParameters(data);
 		}
 		req.send(data);
-	}
+	};
 	_.xhrSend = xhrSend;
 }
 
@@ -210,6 +214,9 @@ if (_.bindEvent === undefined) {
 }
 
 
+/* === Widget === */
+
+
 var uploadWidget = function(element, options) {
 	var self = {};
 	self.initialized = false;
@@ -237,8 +244,16 @@ var uploadWidget = function(element, options) {
 	files.className = 'files';
 	widgetElement.appendChild(files);
 
+	var locked = false;
 	var dropzone;
 	var sortable;
+
+	var setLocked = function(locked) {
+		locked = locked;
+		if (sortable !== undefined) {
+			sortable.option("disabled", locked);
+		}
+	};
 
 	var onClicked = function(e) {
 		if (e.which !== 1) {
@@ -246,23 +261,27 @@ var uploadWidget = function(element, options) {
 		}
 
 		var target = e.target;
-		if (target.className.indexOf('delete-link') !== -1) {
-			var id = target.getAttribute('data-id');
-			_.xhrSend({
-				method: 'POST',
-				data: {'action': 'delete', 'delete': id, 'attachments': 'json'},
-				url: self.updateUrl,
-				successFn: function(data) {
-					renderAttachments(data);
-				}
-			})
+		var id = target.getAttribute('data-delete-id');
+		if (id !== null) {
+			if (locked) {
+				return;
+			}
+			console.log(id);
+			//_.xhrSend({
+			//	method: 'POST',
+			//	data: {'action': 'delete', 'delete': id, 'attachments': 'json'},
+			//	url: self.updateUrl,
+			//	successFn: function(data) {
+			//		renderAttachments(data);
+			//	}
+			//})
 			e.preventDefault();
 			return;
 		}
 
-		_.triggerEvent(widgetElement, 'click')
+		_.triggerEvent(widgetElement, 'click');
 		element.click();
-	}
+	};
 
 	_.bindEvent(files, 'click', onClicked);
 
@@ -275,7 +294,7 @@ var uploadWidget = function(element, options) {
 		widgetElement.parentNode.removeChild(widgetElement);
 		element.style.display = 'block';
 		_.unbindEvent(files, 'click', onClicked);
-	}
+	};
 
 	self.makeAttachmentWidget = function(attachmentData) {
 		/*
@@ -287,6 +306,7 @@ var uploadWidget = function(element, options) {
 		 * }
 		 */
 		var attachment = document.createElement('DIV');
+		attachment.setAttribute('data-id', attachmentData.id);
 		if (attachmentData.finished) {
 			attachment.className = 'attachment attachment-finished';
 		}
@@ -300,10 +320,10 @@ var uploadWidget = function(element, options) {
 		var thumbnail = document.createElement('DIV');
 		thumbnail.className = 'thumbnail';
 		frame.appendChild(thumbnail);
-		if (attachmentData['thumbnail'] !== undefined) {
+		if (attachmentData.thumbnail !== undefined) {
 			var img = document.createElement('IMG');
 			thumbnail.appendChild(img);
-			img.setAttribute('src', attachmentData['thumbnail']);
+			img.setAttribute('src', attachmentData.thumbnail);
 		}
 
 		var caption = document.createElement('DIV');
@@ -322,7 +342,7 @@ var uploadWidget = function(element, options) {
 			var link = document.createElement('A');
 			link.innerHTML = 'Delete';
 			link.setAttribute('href', '#');
-			link.setAttribute('data-id', attachmentData.id);
+			link.setAttribute('data-delete-id', attachmentData.id);
 			link.className = 'delete delete-link';
 			frame.appendChild(link);
 		}
@@ -332,8 +352,8 @@ var uploadWidget = function(element, options) {
 			updateProgress: function(value) {
 				progress.style.width = value + '%';
 			}
-		}
-	}
+		};
+	};
 
 	var renderAttachments = function(data) {
 		var toRemove = [];
@@ -345,19 +365,19 @@ var uploadWidget = function(element, options) {
 
 		_.forEach(toRemove, function(node) {
 			node.parentNode.removeChild(node);
-		})
+		});
 
 		var insertAttachment;
 		var lastNode = files.childNodes[files.childNodes.length - 1];
 		if (lastNode === undefined) {
 			insertAttachment = function(element) {
 				files.appendChild(element);
-			}
+			};
 		}
 		else {
 			insertAttachment = function(element) {
 				lastNode.parentNode.insertBefore(element, lastNode);
-			}
+			};
 		}
 
 		_.forEach(data, function(attachmentData) {
@@ -393,6 +413,8 @@ var uploadWidget = function(element, options) {
 				upload.previewWidget = undefined;
 			},
 			queuecomplete: function() {
+			},
+			complete: function(upload) {
 			},
 			processing: function() {
 				if (options.autoProcess) {
@@ -434,9 +456,12 @@ var uploadWidget = function(element, options) {
 	var createSortable = function() {
 		var sortable = Sortable.create(files, {
 			animation: 200,
+			draggable: '.attachment',
 			onSort: function() {
-				sortable.option("disabled", true);
-				sortable.option("disabled", false);
+				setLocked(true);
+				var order = sortable.toArray();
+				console.log(order);
+				setLocked(false);
 			},
 			onStart: function() {
 			},
@@ -457,7 +482,7 @@ var uploadWidget = function(element, options) {
 				dropzone = createDropzone();
 			}
 		}
-	})
+	});
 
 	return self;
 };
