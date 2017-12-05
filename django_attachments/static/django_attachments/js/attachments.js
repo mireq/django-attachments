@@ -373,6 +373,10 @@ var fileWidget = function(data) {
 		return state.id;
 	};
 
+	self.getFile = function() {
+		return state.file;
+	};
+
 	self.getState = function() {
 		var stateCopy = {};
 		_.forEachDict(state, function(key, value) {
@@ -446,6 +450,7 @@ var uploadWidget = function(element, options) {
 			var widget = attachments.get(id);
 			if (widget !== null) {
 				if (widget.getId()[0] === ':') {
+					dropzone.removeFile(widget.getFile());
 					attachments.remove(id);
 				}
 				else {
@@ -455,14 +460,6 @@ var uploadWidget = function(element, options) {
 					}
 				}
 			}
-			//_.xhrSend({
-			//	method: 'POST',
-			//	data: {'action': 'delete', 'delete': id, 'attachments': 'json'},
-			//	url: self.updateUrl,
-			//	successFn: function(data) {
-			//		renderAttachments(data);
-			//	}
-			//})
 			e.preventDefault();
 			return;
 		}
@@ -482,6 +479,15 @@ var uploadWidget = function(element, options) {
 		widgetElement.parentNode.removeChild(widgetElement);
 		element.style.display = 'block';
 		_.unbindEvent(filesElement, 'click', onClicked);
+	};
+
+	self.save = function() {
+		if (dropzone === undefined) {
+			setTimeout(function() { saveUploads(); }, 0);
+		}
+		else {
+			setTimeout(function() { dropzone.processQueue(); saveUploads(); }, 0);
+		}
 	};
 
 	var createDropzone = function() {
@@ -520,6 +526,7 @@ var uploadWidget = function(element, options) {
 				}
 			},
 			complete: function(upload) {
+				upload.previewWidget = undefined;
 			},
 			processing: function() {
 				if (options.autoProcess) {
@@ -532,7 +539,8 @@ var uploadWidget = function(element, options) {
 					name: upload.name,
 					finished: false,
 					id: ':' + dropzoneUploadId,
-					deletable: true
+					deletable: true,
+					file: upload
 				};
 				dropzoneUploadId++;
 
@@ -561,7 +569,9 @@ var uploadWidget = function(element, options) {
 				pull: false
 			},
 			onSort: function() {
-				saveUploads();
+				if (options.autoProcess) {
+					saveUploads();
+				}
 			},
 			onStart: function() {
 			},
@@ -637,6 +647,7 @@ var uploadWidget = function(element, options) {
 			if (self.uploadUrl) {
 				dropzone = createDropzone();
 			}
+			initialized = true;
 		}
 	});
 
@@ -645,7 +656,11 @@ var uploadWidget = function(element, options) {
 
 
 
-uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: true});
+var w = uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: false});
+var btn = document.createElement('button');
+btn.innerHTML = 'submit';
+document.body.appendChild(btn);
+btn.onclick = function() { w.save(); console.log(w); };
 
 
 }());
