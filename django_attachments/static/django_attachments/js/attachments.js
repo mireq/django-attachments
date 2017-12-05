@@ -323,16 +323,47 @@ var listModel = function() {
 		}
 	};
 
+	self.destroy = function() {
+		self.setItems([]);
+		listeners = {
+			add: [],
+			delete: [],
+			move: [],
+			change: []
+		};
+	};
+
 	return self;
 };
 
 
-var listView = function(model) {
-	
+var listView = function(model, element, widgetConstructor) {
+	var self = {};
+	var widgets = [];
+
+	model.onAdded(function(item) {
+		console.log("added", item);
+	});
+	model.onDeleted(function(item) {
+		console.log("deleted", item);
+	});
+	model.onMoved(function(item, position) {
+		console.log("moved", item, position);
+	});
+	model.onChanged(function(item) {
+		console.log("changed", item);
+	});
+
+	return self;
 };
 
 
 /* === Widget === */
+
+
+var fileWidget = function() {
+
+};
 
 
 var uploadWidget = function(element, options) {
@@ -363,6 +394,7 @@ var uploadWidget = function(element, options) {
 	widgetElement.appendChild(files);
 
 	var attachmentsModel = listModel();
+	var attachmentsView = listView(attachmentsModel, files, fileWidget);
 	var dropzone;
 	var dropzoneUploadList = [];
 	var dropzoneUploadId = 0;
@@ -549,7 +581,7 @@ var uploadWidget = function(element, options) {
 				dropzoneUploadId++;
 				dropzoneUploadList.push(upload);
 				attachmentsModel.addItem(upload.listData);
-				/*
+
 				upload.previewWidget = self.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
 					'name': upload.name,
@@ -558,7 +590,6 @@ var uploadWidget = function(element, options) {
 				});
 				upload.previewElement = upload.previewWidget.element;
 				files.appendChild(upload.previewElement);
-				*/
 
 				if (dropzone.options.autoProcessQueue) {
 					return;
@@ -588,12 +619,31 @@ var uploadWidget = function(element, options) {
 		var sortable = Sortable.create(files, {
 			animation: 200,
 			draggable: '.attachment',
+			group: {
+				put: false,
+				pull: false
+			},
 			onSort: function() {
 				sortUploads();
 			},
 			onStart: function() {
 			},
-			onEnd: function() {
+			onEnd: function(evt) {
+				var position;
+				if (evt.newIndex > evt.oldIndex) {
+					position = files.childNodes[evt.oldIndex];
+				}
+				else {
+					position = files.childNodes[evt.oldIndex + 1];
+				}
+				evt.item.parentNode.removeChild(evt.item);
+				if (position) {
+					position.parentNode.insertBefore(evt.item, position);
+				}
+				else {
+					files.appendChild(evt.item);
+				}
+				console.log(evt.oldIndex, evt.newIndex);
 			}
 		});
 		return sortable;
