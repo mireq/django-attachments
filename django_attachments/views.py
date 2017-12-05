@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.http import JsonResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.functional import cached_property
-from django.http import HttpResponse
 from easy_thumbnails.files import get_thumbnailer
 
-import json
 from .forms import AttachmentUploadForm, AttachmentUpdateFormSet
 
 
@@ -93,10 +92,13 @@ class AttachmentEditableMixin(object):
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
 	def upload_form_valid(self):
-		self.upload_form.save()
+		upload = self.upload_form.save()
 		self.update_primary_attachment()
 		if self.request.POST.get('attachments') == 'json':
-			return self.render_json_attachments()
+			attachments = self.serialize_attachemnts()
+			for attachment in attachments:
+				attachment['is_new'] = upload.id == attachment['id']
+			return JsonResponse({'attachments': attachments})
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def upload_form_invalid(self):
@@ -139,8 +141,7 @@ class AttachmentEditableMixin(object):
 		return attachments_data
 
 	def render_json_attachments(self):
-		attachments = json.dumps(self.serialize_attachemnts())
-		return HttpResponse(attachments, 'application/json')
+		return JsonResponse({'attachments': self.serialize_attachemnts()})
 
 	def update_primary_attachment(self):
 		library = self.get_library()

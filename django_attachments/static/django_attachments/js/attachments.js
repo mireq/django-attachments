@@ -214,155 +214,167 @@ if (_.bindEvent === undefined) {
 }
 
 
-var listModel = function() {
-	var self = {};
-	var listeners = {
-		add: [],
-		delete: [],
-		move: [],
-		change: []
-	};
-
-	onAdded = function(item) {
-		_.forEach(listeners.add, function(listener) {
-			listener(item);
-		});
-	};
-	onDeleted = function(item) {
-		_.forEach(listeners.delete, function(listener) {
-			listener(item);
-		});
-	};
-	onMoved = function(item, position) {
-		_.forEach(listeners.move, function(listener) {
-			listener(item, position);
-		});
-	};
-	onChanged = function(item) {
-		_.forEach(listeners.change, function(listener) {
-			listener(item);
-		});
-	};
-
-	self.onAdded = function(listener) { listeners.add.push(listener); };
-	self.onDeleted = function(listener) { listeners.delete.push(listener); };
-	self.onMoved = function(listener) { listeners.move.push(listener); };
-	self.onChanged = function(listener) { listeners.change.push(listener); };
-
-	var items = [];
-
-	self.setItems = function(newItems) {
-		var itemPointer = 0;
-		_.forEach(newItems, function(newItem, newPosition) {
-			var oldPosition;
-			_.forEach(items, function(oldItem, position) {
-				if (oldItem.id === newItem.id) {
-					oldPosition = position;
-				}
-			});
-
-			// insert
-			if (oldPosition === undefined) {
-				if (newPosition >= items.length) {
-					items.push(newItem);
-					onAdded(newItem);
-				}
-				else {
-					items.push(newItem);
-					onAdded(newItem);
-					items.splice(items.length - 1, 1);
-					items.splice(newPosition, 0, newItem);
-					onMoved(newItem, position);
-				}
-				return;
-			}
-
-			// change (same position)
-			if (oldPosition == newPosition) {
-				items[newPosition] = newItem;
-				onChanged(newItem);
-			}
-			// change (moved position)
-			else {
-				var oldItem = items[oldPosition];
-				items.splice(oldPosition, 1);
-				items.splice(newPosition, 0, oldItem);
-				onMoved(oldItem, newPosition);
-				items[newPosition] = newItem;
-				onChanged(newItem);
-			}
-		});
-
-		while (items.length > newItems.length) {
-			var oldItem = items[newItems.length];
-			items.splice(newItems.length, 1);
-			onDeleted(oldItem);
-		}
-	};
-
-	self.findItem = function(id) {
-		var itemIdx;
-		_.forEach(items, function(item, idx) {
-			if (item.id === id) {
-				itemIdx = idx;
-			}
-		});
-		return itemIdx;
-	};
-
-	self.addItem = function(item) {
-		items.push(item);
-		onAdded(item);
-	};
-
-	self.changeItem = function(item) {
-		var itemIdx = self.findItem(item.id);
-		if (itemIdx !== undefined) {
-			items[itemIdx] = item;
-			self.onChange(item);
-		}
-	};
-
-	self.destroy = function() {
-		self.setItems([]);
-		listeners = {
-			add: [],
-			delete: [],
-			move: [],
-			change: []
-		};
-	};
-
-	return self;
-};
-
-
-var listView = function(model, element, widgetConstructor) {
-	var self = {};
-	var widgets = [];
-
-	model.onAdded(function(item) {
-		console.log("added", item);
-	});
-	model.onDeleted(function(item) {
-		console.log("deleted", item);
-	});
-	model.onMoved(function(item, position) {
-		console.log("moved", item, position);
-	});
-	model.onChanged(function(item) {
-		console.log("changed", item);
-	});
-
-	return self;
-};
-
 
 /* === Widget === */
 
 
-var fileWidget = function() {
+var attachmentsContainer = function(container, widget) {
+	var self = {};
+	var widgets = {};
 
+	self.add = function(item) {
+		var widgetInstance = widgets[item.id + ''];
+		if (widgetInstance === undefined) {
+			widgetInstance = widget(item);
+			widgetInstance.insert(container);
+			widgets[item.id] = widgetInstance;
+		}
+		else {
+			widgetInstance.update(item);
+		}
+		return widgetInstance;
+	};
+
+	self.remove = function(id) {
+		var widgetInstance;
+		if (item.getId === undefined) {
+			widgetInstance = widgets[id + ''];
+		}
+		else {
+			widgetInstance = widgets[id.getId()];
+		}
+		if (widgetInstance !== undefined) {
+			widgetInstance.remove();
+		}
+		return widgetInstance;
+	};
+
+	self.toList = function() {
+		var list = [];
+		_.forEach(container.childNodes, function(node) {
+			var id = node.getAttribute('data-id');
+			if (id === null) {
+				return;
+			}
+			var widget = widgets[id];
+			if (widget === undefined) {
+				return;
+			}
+
+			list.push(widget.getState());
+		});
+		return list;
+	};
+
+	self.changeId = function(oldId, newId) {
+		var widgetInstance = widgets[oldId + ''];
+		if (widgetInstance === undefined) {
+			return;
+		}
+		delete widgets[oldId + ''];
+		widgets[newId + ''] = widgetInstance;
+		widgetInstance.update({id: newId});
+	};
+
+	self.load = function(items) {
+		_.forEach(items, function(item) {
+			self.add(item);
+		});
+	};
+
+	return self;
+};
+
+
+var fileWidget = function(data) {
+	var self = {};
+	var state = {};
+	var elements = {};
+
+	self.element = document.createElement('div');
+	elements.thumbnail = document.createElement('div');
+	elements.img = document.createElement('img');
+	elements.caption = document.createElement('div');
+	elements.captionSpan = document.createElement('span');
+	elements.progress = document.createElement('div');
+	elements.delete = document.createElement('a');
+
+	elements.thumbnail.className = 'thumbnail';
+	elements.caption.className = 'caption';
+	elements.progress.className = 'progress';
+	elements.delete.className = 'delete delete-link';
+	elements.delete.setAttribute('href', '#');
+	elements.delete.setAttribute('data-delete', '');
+
+	elements.thumbnail.appendChild(elements.img);
+	elements.caption.appendChild(elements.captionSpan);
+	elements.caption.appendChild(elements.progress);
+
+	self.element.appendChild(elements.thumbnail);
+	self.element.appendChild(elements.caption);
+
+	self.update = function(data) {
+		_.forEachDict(data, function(key, value) {
+			state[key] = value;
+		});
+		state.id = state.id + ''; // convert to string
+		renderState();
+	};
+
+	self.remove = function() {
+		self.element.parentNode.removeChild(element);
+	};
+
+	self.insert = function(parent, before) {
+		if (before === undefined) {
+			parent.appendChild(self.element);
+		}
+		else {
+			parent.insertBefore(self.element, before);
+		}
+	};
+
+	var renderState = function() {
+		self.element.className = 'attachment attachment-' + (state.finished ? 'finished' : 'uploading');
+		self.element.setAttribute('data-id', state.id);
+		elements.img.src = state.thumbnail;
+		elements.captionSpan.innerHTML = '';
+		elements.captionSpan.appendChild(document.createTextNode(state.name));
+		if (state.deletable) {
+			if (!elements.delete.parentNode) {
+				self.element.appendChild(elements.delete);
+			}
+		}
+		else {
+			if (elements.delete.parentNode) {
+				self.element.removeChild(elements.delete);
+			}
+		}
+		if (state.progress === undefined || state.finished) {
+			elements.progress.style.display = 'none';
+		}
+		else {
+			elements.progress.style.display = 'block';
+			elements.progress.style.width = state.progress + '%';
+		}
+	};
+
+	self.getId = function() {
+		return state.id;
+	};
+
+	self.getState = function() {
+		var stateCopy = {};
+		_.forEachDict(state, function(key, value) {
+			stateCopy[key] = value;
+		});
+		return stateCopy;
+	};
+
+	self.update(data);
+	renderState();
+
+	return self;
 };
 
 
@@ -389,16 +401,14 @@ var uploadWidget = function(element, options) {
 	element.style.display = 'none';
 	element.parentNode.insertBefore(widgetElement, element);
 
-	var files = document.createElement('DIV');
-	files.className = 'files';
-	widgetElement.appendChild(files);
+	var filesElement = document.createElement('DIV');
+	filesElement.className = 'files';
+	widgetElement.appendChild(filesElement);
 
-	var attachmentsModel = listModel();
-	var attachmentsView = listView(attachmentsModel, files, fileWidget);
 	var dropzone;
-	var dropzoneUploadList = [];
 	var dropzoneUploadId = 0;
 	var sortable;
+	var attachments = attachmentsContainer(filesElement, fileWidget);
 
 	var onClicked = function(e) {
 		if (e.which !== 1) {
@@ -408,9 +418,6 @@ var uploadWidget = function(element, options) {
 		var target = e.target;
 		var id = target.getAttribute('data-delete-id');
 		if (id !== null) {
-			if (locked) {
-				return;
-			}
 			console.log(id);
 			//_.xhrSend({
 			//	method: 'POST',
@@ -428,7 +435,7 @@ var uploadWidget = function(element, options) {
 		element.click();
 	};
 
-	_.bindEvent(files, 'click', onClicked);
+	_.bindEvent(filesElement, 'click', onClicked);
 
 	self.destroy = function() {
 		if (sortable !== undefined) {
@@ -438,101 +445,7 @@ var uploadWidget = function(element, options) {
 		dropzone = undefined;
 		widgetElement.parentNode.removeChild(widgetElement);
 		element.style.display = 'block';
-		_.unbindEvent(files, 'click', onClicked);
-	};
-
-	self.makeAttachmentWidget = function(attachmentData) {
-		/*
-		 * Returns dictionary:
-		 *
-		 * {
-		 *   element: html_element,
-		 *   updateProgress: function
-		 * }
-		 */
-		var attachment = document.createElement('DIV');
-		attachment.setAttribute('data-id', attachmentData.id);
-		if (attachmentData.finished) {
-			attachment.className = 'attachment attachment-finished';
-		}
-		else {
-			attachment.className = 'attachment attachment-uploading';
-			attachment.setAttribute('data-uploading', 'data-uploading');
-		}
-		var frame = document.createElement('DIV');
-		frame.className = 'attachment-frame';
-		attachment.appendChild(frame);
-		var thumbnail = document.createElement('DIV');
-		thumbnail.className = 'thumbnail';
-		frame.appendChild(thumbnail);
-		if (attachmentData.thumbnail !== undefined) {
-			var img = document.createElement('IMG');
-			thumbnail.appendChild(img);
-			img.setAttribute('src', attachmentData.thumbnail);
-		}
-
-		var caption = document.createElement('DIV');
-		caption.className = 'caption';
-		frame.appendChild(caption);
-
-		var progress = document.createElement('DIV');
-		progress.className = 'progress';
-		caption.appendChild(progress);
-
-		var captionSpan = document.createElement('SPAN');
-		caption.appendChild(captionSpan);
-		captionSpan.appendChild(document.createTextNode(attachmentData.name));
-
-		if (self.updateUrl !== null && attachmentData.id !== undefined) {
-			var link = document.createElement('A');
-			link.innerHTML = 'Delete';
-			link.setAttribute('href', '#');
-			link.setAttribute('data-delete-id', attachmentData.id);
-			link.className = 'delete delete-link';
-			frame.appendChild(link);
-		}
-
-		return {
-			element: attachment,
-			updateProgress: function(value) {
-				progress.style.width = value + '%';
-			}
-		};
-	};
-
-	var renderAttachments = function(data) {
-		var toRemove = [];
-		_.forEach(files.childNodes, function(node) {
-			if (node.getAttribute('data-uploading') === null) {
-				toRemove.push(node);
-			}
-		});
-
-		_.forEach(toRemove, function(node) {
-			node.parentNode.removeChild(node);
-		});
-
-		var insertAttachment;
-		var lastNode = files.childNodes[files.childNodes.length - 1];
-		if (lastNode === undefined) {
-			insertAttachment = function(element) {
-				files.appendChild(element);
-			};
-		}
-		else {
-			insertAttachment = function(element) {
-				lastNode.parentNode.insertBefore(element, lastNode);
-			};
-		}
-
-		_.forEach(data, function(attachmentData) {
-			insertAttachment(self.makeAttachmentWidget({
-				'thumbnail': attachmentData.thumbnail,
-				'name': attachmentData.name,
-				'id': attachmentData.id,
-				'finished': true
-			}).element);
-		});
+		_.unbindEvent(filesElement, 'click', onClicked);
 	};
 
 	var createDropzone = function() {
@@ -546,18 +459,19 @@ var uploadWidget = function(element, options) {
 				formData.append('action', 'upload');
 				formData.append('attachments', 'json');
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
-				console.log(file);
 			},
 			uploadprogress: function(upload, progress) {
-				upload.previewWidget.updateProgress(progress);
+				upload.previewWidget.update({ progress: progress });
 			},
 			success: function(upload, data) {
-				/*
-				attachmentsModel.setItems(data);
-				upload.previewElement.parentNode.removeChild(upload.previewElement);
-				upload.previewElement = undefined;
+				_.forEach(data.attachments, function(attachment) {
+					attachment.finished = true;
+					if (attachment.is_new) {
+						attachments.changeId(upload.previewWidget.getId(), attachment.id);
+					}
+				});
+				attachments.load(data.attachments);
 				upload.previewWidget = undefined;
-				*/
 			},
 			queuecomplete: function() {
 				if (self.updateUrl !== null) {
@@ -579,17 +493,8 @@ var uploadWidget = function(element, options) {
 					'id': ':' + dropzoneUploadId
 				};
 				dropzoneUploadId++;
-				dropzoneUploadList.push(upload);
-				attachmentsModel.addItem(upload.listData);
 
-				upload.previewWidget = self.makeAttachmentWidget({
-					'thumbnail': upload.dataURL,
-					'name': upload.name,
-					'finished': false,
-					'upload': upload
-				});
-				upload.previewElement = upload.previewWidget.element;
-				files.appendChild(upload.previewElement);
+				upload.previewWidget = attachments.add(upload.listData);
 
 				if (dropzone.options.autoProcessQueue) {
 					return;
@@ -599,24 +504,14 @@ var uploadWidget = function(element, options) {
 				}
 			},
 			thumbnail: function(upload, dataURL) {
-				/*
-				var oldPreview = upload.previewElement;
-				upload.previewWidget = self.makeAttachmentWidget({
-					'thumbnail': upload.dataURL,
-					'name': upload.name,
-					'finished': false
-				});
-				upload.previewElement = upload.previewWidget.element;
-				oldPreview.parentNode.insertBefore(upload.previewElement, oldPreview);
-				oldPreview.parentNode.removeChild(oldPreview);
-				*/
+				upload.previewWidget.update({thumbnail: upload.dataURL});
 			}
 		});
 		return dropzone;
 	};
 
 	var createSortable = function() {
-		var sortable = Sortable.create(files, {
+		var sortable = Sortable.create(filesElement, {
 			animation: 200,
 			draggable: '.attachment',
 			group: {
@@ -629,21 +524,6 @@ var uploadWidget = function(element, options) {
 			onStart: function() {
 			},
 			onEnd: function(evt) {
-				var position;
-				if (evt.newIndex > evt.oldIndex) {
-					position = files.childNodes[evt.oldIndex];
-				}
-				else {
-					position = files.childNodes[evt.oldIndex + 1];
-				}
-				evt.item.parentNode.removeChild(evt.item);
-				if (position) {
-					position.parentNode.insertBefore(evt.item, position);
-				}
-				else {
-					files.appendChild(evt.item);
-				}
-				console.log(evt.oldIndex, evt.newIndex);
 			}
 		});
 		return sortable;
@@ -656,7 +536,7 @@ var uploadWidget = function(element, options) {
 	_.xhrSend({
 		url: self.listUrl,
 		successFn: function(data) {
-			attachmentsModel.setItems(data);
+			attachments.load(data.attachments);
 			if (self.updateUrl) {
 				sortable = createSortable();
 			}
@@ -671,7 +551,7 @@ var uploadWidget = function(element, options) {
 
 
 
-uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: false});
+uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: true});
 
 
 }());
