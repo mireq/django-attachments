@@ -237,7 +237,7 @@ var attachmentsContainer = function(container, widget) {
 
 	self.remove = function(id) {
 		var widgetInstance;
-		if (item.getId === undefined) {
+		if (id.getId === undefined) {
 			widgetInstance = widgets[id + ''];
 		}
 		else {
@@ -247,6 +247,16 @@ var attachmentsContainer = function(container, widget) {
 			widgetInstance.remove();
 		}
 		return widgetInstance;
+	};
+
+	self.get = function(id) {
+		var widgetInstance = widgets[id + ''];
+		if (widgetInstance === undefined) {
+			return null;
+		}
+		else {
+			return widgetInstance;
+		}
 	};
 
 	self.toList = function() {
@@ -322,7 +332,7 @@ var fileWidget = function(data) {
 	};
 
 	self.remove = function() {
-		self.element.parentNode.removeChild(element);
+		self.element.parentNode.removeChild(self.element);
 	};
 
 	self.insert = function(parent, before) {
@@ -335,7 +345,7 @@ var fileWidget = function(data) {
 	};
 
 	var renderState = function() {
-		self.element.className = 'attachment attachment-' + (state.finished ? 'finished' : 'uploading');
+		self.element.className = 'attachment attachment-' + (state.finished ? 'finished' : 'uploading') + (state.deleted ? ' deleted' : '');
 		self.element.setAttribute('data-id', state.id);
 		elements.img.src = state.thumbnail;
 		elements.captionSpan.innerHTML = '';
@@ -410,15 +420,41 @@ var uploadWidget = function(element, options) {
 	var sortable;
 	var attachments = attachmentsContainer(filesElement, fileWidget);
 
+	var findId = function(element) {
+		var id;
+		while (element) {
+			id = element.getAttribute('data-id');
+			if (id !== null) {
+				return id;
+			}
+			element = element.parentNode;
+		}
+		return null;
+	};
+
 	var onClicked = function(e) {
 		if (e.which !== 1) {
 			return;
 		}
 
 		var target = e.target;
-		var id = target.getAttribute('data-delete-id');
-		if (id !== null) {
-			console.log(id);
+		if (target.getAttribute('data-delete') !== null) {
+			var id = findId(target);
+			if (id === null) {
+				return;
+			}
+			var widget = attachments.get(id);
+			if (widget !== null) {
+				if (widget.getId()[0] === ':') {
+					attachments.remove(id);
+				}
+				else {
+					widget.update({ deleted: true });
+					if (options.autoProcess) {
+						saveUploads();
+					}
+				}
+			}
 			//_.xhrSend({
 			//	method: 'POST',
 			//	data: {'action': 'delete', 'delete': id, 'attachments': 'json'},
@@ -470,12 +506,17 @@ var uploadWidget = function(element, options) {
 						attachments.changeId(upload.previewWidget.getId(), attachment.id);
 					}
 				});
+				if (self.updateUrl) {
+					_.forEach(data.attachments, function(attachment) {
+						attachment.deletable = true;
+					});
+				}
 				attachments.load(data.attachments);
 				upload.previewWidget = undefined;
 			},
 			queuecomplete: function() {
 				if (self.updateUrl !== null) {
-					sortUploads();
+					saveUploads();
 				}
 			},
 			complete: function(upload) {
@@ -487,10 +528,11 @@ var uploadWidget = function(element, options) {
 			},
 			addedfile: function(upload) {
 				upload.listData = {
-					'thumbnail': upload.dataURL,
-					'name': upload.name,
-					'finished': false,
-					'id': ':' + dropzoneUploadId
+					thumbnail: upload.dataURL,
+					name: upload.name,
+					finished: false,
+					id: ':' + dropzoneUploadId,
+					deletable: true
 				};
 				dropzoneUploadId++;
 
@@ -519,7 +561,7 @@ var uploadWidget = function(element, options) {
 				pull: false
 			},
 			onSort: function() {
-				sortUploads();
+				saveUploads();
 			},
 			onStart: function() {
 			},
@@ -529,7 +571,7 @@ var uploadWidget = function(element, options) {
 		return sortable;
 	};
 
-	var sortUploads = function() {
+	var saveUploads = function() {
 		_.xhrSend({
 			url: self.listUrl,
 			successFn: function(data) {
@@ -546,7 +588,11 @@ var uploadWidget = function(element, options) {
 					var oldAttachment = attachmentsIndex[attachment.id];
 					if (oldAttachment !== undefined) {
 						oldAttachment.rank = rowNumber;
+						oldAttachment.deleted = attachment.deleted;
 						rowNumber++;
+					}
+					if (attachment.deleted) {
+						attachments.remove(attachment.id);
 					}
 				});
 				_.forEach(oldAttachments, function(attachment, rowIndex) {
@@ -556,6 +602,9 @@ var uploadWidget = function(element, options) {
 					}
 					formData['form-' + rowIndex + '-ORDER'] = attachment.rank + 1;
 					formData['form-' + rowIndex + '-id'] = attachment.id;
+					if (attachment.deleted) {
+						formData['form-' + rowIndex + '-DELETE'] = '1';
+					}
 				});
 				formData['form-INITIAL_FORMS'] = rowNumber;
 				formData['form-TOTAL_FORMS'] = rowNumber;
@@ -575,8 +624,13 @@ var uploadWidget = function(element, options) {
 	_.xhrSend({
 		url: self.listUrl,
 		successFn: function(data) {
+			if (self.updateUrl) {
+				_.forEach(data.attachments, function(attachment) {
+					attachment.deletable = true;
+					attachment.deletable = true;
+				});
+			}
 			attachments.load(data.attachments);
-			sortUploads();
 			if (self.updateUrl) {
 				sortable = createSortable();
 			}

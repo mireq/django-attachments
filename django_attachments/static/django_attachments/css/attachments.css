@@ -27,6 +27,10 @@
 	overflow: hidden;
 }
 
+.attachments-widget .attachment.deleted {
+	display: none;
+}
+
 .attachments-widget .thumbnail {
 	width: 200px;
 	height: 150px;
