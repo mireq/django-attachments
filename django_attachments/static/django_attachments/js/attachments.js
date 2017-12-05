@@ -347,7 +347,7 @@ var fileWidget = function(data) {
 	var renderState = function() {
 		self.element.className = 'attachment attachment-' + (state.finished ? 'finished' : 'uploading') + (state.deleted ? ' deleted' : '');
 		self.element.setAttribute('data-id', state.id);
-		elements.img.src = state.thumbnail;
+		elements.img.src = state.thumbnail === undefined ? 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' : state.thumbnail;
 		elements.captionSpan.innerHTML = '';
 		elements.captionSpan.appendChild(document.createTextNode(state.name));
 		if (state.deletable) {
@@ -423,6 +423,7 @@ var uploadWidget = function(element, options) {
 	var dropzoneUploadId = 0;
 	var sortable;
 	var attachments = attachmentsContainer(filesElement, fileWidget);
+	var queueSuccess;
 
 	var findId = function(element) {
 		var id;
@@ -481,12 +482,22 @@ var uploadWidget = function(element, options) {
 		_.unbindEvent(filesElement, 'click', onClicked);
 	};
 
-	self.save = function() {
+	self.save = function(success) {
 		if (dropzone === undefined) {
-			setTimeout(function() { saveUploads(); }, 0);
+			setTimeout(function() {
+				saveUploads(success);
+			}, 0);
 		}
 		else {
-			setTimeout(function() { dropzone.processQueue(); saveUploads(); }, 0);
+			setTimeout(function() {
+				if (dropzone.getQueuedFiles().length || dropzone.getUploadingFiles().length) {
+					queueSuccess = success;
+					dropzone.processQueue();
+				}
+				else {
+					saveUploads(success);
+				}
+			}, 0);
 		}
 	};
 
@@ -522,16 +533,18 @@ var uploadWidget = function(element, options) {
 			},
 			queuecomplete: function() {
 				if (self.updateUrl !== null) {
-					saveUploads();
+					saveUploads(queueSuccess);
+					queueSuccess = undefined;
+				}
+				if (!options.autoProcess) {
+					dropzone.options.autoProcessQueue = false;
 				}
 			},
 			complete: function(upload) {
 				upload.previewWidget = undefined;
 			},
 			processing: function() {
-				if (options.autoProcess) {
-					dropzone.options.autoProcessQueue = true;
-				}
+				dropzone.options.autoProcessQueue = true;
 			},
 			addedfile: function(upload) {
 				upload.listData = {
@@ -581,7 +594,7 @@ var uploadWidget = function(element, options) {
 		return sortable;
 	};
 
-	var saveUploads = function() {
+	var saveUploads = function(success) {
 		_.xhrSend({
 			url: self.listUrl,
 			successFn: function(data) {
@@ -625,6 +638,9 @@ var uploadWidget = function(element, options) {
 					data: formData,
 					url: self.updateUrl,
 					successFn: function(data) {
+						if (success !== undefined) {
+							success();
+						}
 					}
 				});
 			}
@@ -660,7 +676,7 @@ var w = uploadWidget(document.getElementsByClassName('attachments-upload-widget'
 var btn = document.createElement('button');
 btn.innerHTML = 'submit';
 document.body.appendChild(btn);
-btn.onclick = function() { w.save(); console.log(w); };
+btn.onclick = function() { w.save(function() { console.log("done"); }); };
 
 
 }());
