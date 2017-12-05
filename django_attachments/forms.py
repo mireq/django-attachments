@@ -40,7 +40,9 @@ class AttachmentUpdateForm(forms.ModelForm):
 		fields = ()
 
 	def save(self, commit=True):
-		obj = super(ImageUpdateForm, self).save(commit=False)
+		print("try save")
+		obj = super(AttachmentUpdateForm, self).save(commit=False)
+		print(self.cleaned_data)
 		old_rank = obj.rank
 		obj.rank = self.cleaned_data['ORDER'] - 1
 		if commit:

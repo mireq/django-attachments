@@ -530,13 +530,53 @@ var uploadWidget = function(element, options) {
 	};
 
 	var sortUploads = function() {
-		console.log("sorting");
+		_.xhrSend({
+			url: self.listUrl,
+			successFn: function(data) {
+				var oldAttachments = data.attachments;
+				var newAttachments = attachments.toList();
+				var formData = {'action': 'update', 'attachments': 'json'};
+				var rowNumber = 0;
+				var attachmentsIndex = {};
+				_.forEach(oldAttachments, function(attachment) {
+					attachment.rank = -1;
+					attachmentsIndex[attachment.id] = attachment;
+				});
+				_.forEach(newAttachments, function(attachment) {
+					var oldAttachment = attachmentsIndex[attachment.id];
+					if (oldAttachment !== undefined) {
+						oldAttachment.rank = rowNumber;
+						rowNumber++;
+					}
+				});
+				_.forEach(oldAttachments, function(attachment, rowIndex) {
+					if (attachment.rank === -1) {
+						attachment.rank = rowNumber;
+						rowNumber++;
+					}
+					formData['form-' + rowIndex + '-ORDER'] = attachment.rank + 1;
+					formData['form-' + rowIndex + '-id'] = attachment.id;
+				});
+				formData['form-INITIAL_FORMS'] = rowNumber;
+				formData['form-TOTAL_FORMS'] = rowNumber;
+				formData['form-MAX_NUM_FORMS'] = 1000;
+				formData['form-MIN_NUM_FORMS'] = 0;
+				_.xhrSend({
+					method: 'POST',
+					data: formData,
+					url: self.updateUrl,
+					successFn: function(data) {
+					}
+				});
+			}
+		});
 	};
 
 	_.xhrSend({
 		url: self.listUrl,
 		successFn: function(data) {
 			attachments.load(data.attachments);
+			sortUploads();
 			if (self.updateUrl) {
 				sortable = createSortable();
 			}

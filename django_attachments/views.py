@@ -73,22 +73,6 @@ class AttachmentEditableMixin(object):
 				return self.update_form_valid()
 			else:
 				return self.update_form_invalid()
-		if action == 'delete' and self.can_update_attachment():
-			pk = None
-			try:
-				pk = int(self.request.POST.get('delete', ''))
-			except ValueError:
-				pass
-			if pk is not None:
-				library = self.get_library()
-				attachment = library.attachment_set.filter(pk=pk).first()
-				if attachment:
-					attachment.delete()
-					library.refresh_from_db()
-					self.update_primary_attachment()
-			if self.request.POST.get('attachments') == 'json':
-				return self.render_json_attachments()
-			return HttpResponseRedirect(self.request.get_full_path())
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
 	def upload_form_valid(self):
