@@ -214,6 +214,124 @@ if (_.bindEvent === undefined) {
 }
 
 
+var listModel = function() {
+	var self = {};
+	var listeners = {
+		add: [],
+		delete: [],
+		move: [],
+		change: []
+	};
+
+	onAdded = function(item) {
+		_.forEach(listeners.add, function(listener) {
+			listener(item);
+		});
+	};
+	onDeleted = function(item) {
+		_.forEach(listeners.delete, function(listener) {
+			listener(item);
+		});
+	};
+	onMoved = function(item, position) {
+		_.forEach(listeners.move, function(listener) {
+			listener(item, position);
+		});
+	};
+	onChanged = function(item) {
+		_.forEach(listeners.change, function(listener) {
+			listener(item);
+		});
+	};
+
+	self.onAdded = function(listener) { listeners.add.push(listener); };
+	self.onDeleted = function(listener) { listeners.delete.push(listener); };
+	self.onMoved = function(listener) { listeners.move.push(listener); };
+	self.onChanged = function(listener) { listeners.change.push(listener); };
+
+	var items = [];
+
+	self.setItems = function(newItems) {
+		var itemPointer = 0;
+		_.forEach(newItems, function(newItem, newPosition) {
+			var oldPosition;
+			_.forEach(items, function(oldItem, position) {
+				if (oldItem.id === newItem.id) {
+					oldPosition = position;
+				}
+			});
+
+			// insert
+			if (oldPosition === undefined) {
+				if (newPosition >= items.length) {
+					items.push(newItem);
+					onAdded(newItem);
+				}
+				else {
+					items.push(newItem);
+					onAdded(newItem);
+					items.splice(items.length - 1, 1);
+					items.splice(newPosition, 0, newItem);
+					onMoved(newItem, position);
+				}
+				return;
+			}
+
+			// change (same position)
+			if (oldPosition == newPosition) {
+				items[newPosition] = newItem;
+				onChanged(newItem);
+			}
+			// change (moved position)
+			else {
+				var oldItem = items[oldPosition];
+				items.splice(oldPosition, 1);
+				items.splice(newPosition, 0, oldItem);
+				onMoved(oldItem, newPosition);
+				items[newPosition] = newItem;
+				onChanged(newItem);
+			}
+		});
+
+		while (items.length > newItems.length) {
+			var oldItem = items[newItems.length];
+			items.splice(newItems.length, 1);
+			onDeleted(oldItem);
+		}
+	};
+
+	self.findItem = function(id) {
+		var itemIdx;
+		_.forEach(items, function(item, idx) {
+			if (item.id === id) {
+				itemIdx = idx;
+			}
+		});
+		return itemIdx;
+	};
+
+	self.addItem = function(item) {
+		items.push(item);
+		onAdded(item);
+	};
+
+	self.changeItem = function(item) {
+		var itemIdx = self.findItem(item.id);
+		if (itemIdx !== undefined) {
+			items[itemIdx] = item;
+			self.onChange(item);
+		}
+	};
+
+	return self;
+};
+
+
+var listView = function(model) {
+	
+};
+
+
 /* === Widget === */
 
 
@@ -244,16 +362,11 @@ var uploadWidget = function(element, options) {
 	files.className = 'files';
 	widgetElement.appendChild(files);
 
-	var locked = false;
+	var attachmentsModel = listModel();
 	var dropzone;
+	var dropzoneUploadList = [];
+	var dropzoneUploadId = 0;
 	var sortable;
-
-	var setLocked = function(locked) {
-		locked = locked;
-		if (sortable !== undefined) {
-			sortable.option("disabled", locked);
-		}
-	};
 
 	var onClicked = function(e) {
 		if (e.which !== 1) {
@@ -407,12 +520,17 @@ var uploadWidget = function(element, options) {
 				upload.previewWidget.updateProgress(progress);
 			},
 			success: function(upload, data) {
-				renderAttachments(data);
+				/*
+				attachmentsModel.setItems(data);
 				upload.previewElement.parentNode.removeChild(upload.previewElement);
 				upload.previewElement = undefined;
 				upload.previewWidget = undefined;
+				*/
 			},
 			queuecomplete: function() {
+				if (self.updateUrl !== null) {
+					sortUploads();
+				}
 			},
 			complete: function(upload) {
 			},
@@ -422,6 +540,16 @@ var uploadWidget = function(element, options) {
 				}
 			},
 			addedfile: function(upload) {
+				upload.listData = {
+					'thumbnail': upload.dataURL,
+					'name': upload.name,
+					'finished': false,
+					'id': ':' + dropzoneUploadId
+				};
+				dropzoneUploadId++;
+				dropzoneUploadList.push(upload);
+				attachmentsModel.addItem(upload.listData);
+				/*
 				upload.previewWidget = self.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
 					'name': upload.name,
@@ -430,6 +558,7 @@ var uploadWidget = function(element, options) {
 				});
 				upload.previewElement = upload.previewWidget.element;
 				files.appendChild(upload.previewElement);
+				*/
 
 				if (dropzone.options.autoProcessQueue) {
 					return;
@@ -439,6 +568,7 @@ var uploadWidget = function(element, options) {
 				}
 			},
 			thumbnail: function(upload, dataURL) {
+				/*
 				var oldPreview = upload.previewElement;
 				upload.previewWidget = self.makeAttachmentWidget({
 					'thumbnail': upload.dataURL,
@@ -448,6 +578,7 @@ var uploadWidget = function(element, options) {
 				upload.previewElement = upload.previewWidget.element;
 				oldPreview.parentNode.insertBefore(upload.previewElement, oldPreview);
 				oldPreview.parentNode.removeChild(oldPreview);
+				*/
 			}
 		});
 		return dropzone;
@@ -458,10 +589,7 @@ var uploadWidget = function(element, options) {
 			animation: 200,
 			draggable: '.attachment',
 			onSort: function() {
-				setLocked(true);
-				var order = sortable.toArray();
-				console.log(order);
-				setLocked(false);
+				sortUploads();
 			},
 			onStart: function() {
 			},
@@ -471,10 +599,14 @@ var uploadWidget = function(element, options) {
 		return sortable;
 	};
 
+	var sortUploads = function() {
+		console.log("sorting");
+	};
+
 	_.xhrSend({
 		url: self.listUrl,
 		successFn: function(data) {
-			renderAttachments(data);
+			attachmentsModel.setItems(data);
 			if (self.updateUrl) {
 				sortable = createSortable();
 			}
@@ -486,6 +618,7 @@ var uploadWidget = function(element, options) {
 
 	return self;
 };
+
 
 
 uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: false});
