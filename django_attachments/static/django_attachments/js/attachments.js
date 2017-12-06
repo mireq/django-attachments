@@ -37,6 +37,53 @@ if (_.cls === undefined) {
 		};
 	}
 	_.cls = getElementsByClassName;
+
+	if (el.classList === undefined) {
+		_.hasClass = function(elem, cls) {
+			return elem.className.split(" ").indexOf(cls) !== -1;
+		};
+
+		_.addClass = function(elem, cls) {
+			elem.className += " " + cls;
+		};
+
+		_.removeClass = function(elem, cls) {
+			var classNames = elem.className.split(" ");
+			var newClassNames = [];
+			for (var i = 0, leni = classNames.length; i < leni; i++) {
+				if (classNames[i] != cls) {
+					newClassNames.push(classNames[i]);
+				}
+			}
+			elem.className = newClassNames.join(" ");
+		};
+
+		_.toggleClass = function(elem, cls) {
+			if (hasClass(elem, cls)) {
+				removeClass(elem, cls);
+			}
+			else {
+				addClass(elem, cls);
+			}
+		};
+	}
+	else {
+		_.hasClass = function(elem, cls) {
+			return elem.classList.contains(cls);
+		};
+
+		_.addClass = function(elem, cls) {
+			return elem.classList.add(cls);
+		};
+
+		_.removeClass = function(elem, cls) {
+			return elem.classList.remove(cls);
+		};
+
+		_.toggleClass = function(elem, cls) {
+			return elem.classList.toggle(cls);
+		};
+	}
 }
 
 
@@ -222,6 +269,23 @@ var attachmentsContainer = function(container, widget) {
 	var self = {};
 	var widgets = {};
 
+	var onChanged = function() {
+		var empty = true;
+		var list = self.toList();
+		_.forEach(list, function(item) {
+			if (!item.deleted) {
+				empty = false;
+			}
+		});
+
+		if (empty) {
+			_.addClass(container.parentNode, 'empty');
+		}
+		else {
+			_.removeClass(container.parentNode, 'empty');
+		}
+	};
+
 	self.add = function(item) {
 		var widgetInstance = widgets[item.id + ''];
 		if (widgetInstance === undefined) {
@@ -232,6 +296,7 @@ var attachmentsContainer = function(container, widget) {
 		else {
 			widgetInstance.update(item);
 		}
+		onChanged();
 		return widgetInstance;
 	};
 
@@ -246,6 +311,7 @@ var attachmentsContainer = function(container, widget) {
 		if (widgetInstance !== undefined) {
 			widgetInstance.remove();
 		}
+		onChanged();
 		return widgetInstance;
 	};
 
@@ -284,13 +350,17 @@ var attachmentsContainer = function(container, widget) {
 		delete widgets[oldId + ''];
 		widgets[newId + ''] = widgetInstance;
 		widgetInstance.update({id: newId});
+		onChanged();
 	};
 
 	self.load = function(items) {
 		_.forEach(items, function(item) {
 			self.add(item);
 		});
+		onChanged();
 	};
+
+	onChanged();
 
 	return self;
 };
