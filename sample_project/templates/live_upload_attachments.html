@@ -25,3 +25,23 @@
 	</div>
 
 {% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script charset="utf-8">
+
+
+(function() {
+	var elements = document.getElementsByClassName('attachments-upload-widget');
+	Array.prototype.forEach.call(elements, function(element) {
+
+		// initialize widget
+		var options = {};
+		var widget = uploadWidget(element, options);
+
+	});
+}());
+
+
+</script>
+{% endblock %}

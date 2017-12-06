@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+	<div class="attachments-upload-widget" data-list-url="{{ request.path }}?attachments=json" data-upload-url="{{ request.path }}" data-update-url="{{ request.path }}">
+
+		<h2>Upload</h2>
+
+		<form action="{{ request.path }}" method="post" enctype="multipart/form-data" class="upload-form">
+			{% csrf_token %}
+			{{ upload_form.as_p }}
+			<input type="hidden" name="action" value="upload">
+			<button type="submit">Upload</button>
+		</form>
+
+		<h2>Change</h2>
+
+		<form action="{{ request.path }}" method="post" class="update-form">
+			{% csrf_token %}
+			{{ update_form.as_p }}
+			<input type="hidden" name="action" value="update">
+			<button type="submit">Change</button>
+		</form>
+
+	</div>
+
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script charset="utf-8">
+
+
+(function() {
+	var elements = document.getElementsByClassName('attachments-upload-widget');
+	Array.prototype.forEach.call(elements, function(element) {
+
+		// initialize widget
+		var options = { autoProcess: false };
+		var uploadWidgetInstance = uploadWidget(element, options);
+
+		var saveButton = document.createElement('button');
+		saveButton.appendChild(document.createTextNode('Save'));
+		document.body.appendChild(saveButton);
+
+
+		saveButton.onclick = function() {
+			if (uploadWidgetInstance.initialized) {
+				saveButton.disabled = true;
+				uploadWidgetInstance.save(function() { // success function
+					saveButton.disabled = false;
+				});
+			}
+		};
+	});
+}());
+
+
+</script>
+{% endblock %}
+

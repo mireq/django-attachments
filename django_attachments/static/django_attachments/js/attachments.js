@@ -733,7 +733,7 @@ var uploadWidget = function(element, options) {
 			if (self.uploadUrl) {
 				dropzone = createDropzone();
 			}
-			initialized = true;
+			self.initialized = true;
 		}
 	});
 
@@ -741,12 +741,7 @@ var uploadWidget = function(element, options) {
 };
 
 
-
-var w = uploadWidget(document.getElementsByClassName('attachments-upload-widget')[0], {autoProcess: false});
-var btn = document.createElement('button');
-btn.innerHTML = 'submit';
-document.body.appendChild(btn);
-btn.onclick = function() { w.save(function() { console.log("done"); }); };
+window.uploadWidget = uploadWidget;
 
 
 }());

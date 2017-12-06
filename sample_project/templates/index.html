@@ -2,6 +2,7 @@
 
 {% block body %}
 <ul>
-	<li><a href="{% url "attachments" %}">Edit attachments</a></li>
+	<li><a href="{% url "live_upload_attachments" %}">Live upload attachments</a></li>
+	<li><a href="{% url "on_save_upload_attachments" %}">On save upload attachments</a></li>
 </ul>
 {% endblock %}
