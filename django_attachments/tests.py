@@ -2,7 +2,9 @@
 from __future__ import unicode_literals
 
 from io import BytesIO
+import os
 
+from easy_thumbnails.files import get_thumbnailer
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -27,6 +29,12 @@ class AttachmentModelTest(TestCase):
 		attachment.save()
 		return attachment
 
+	def create_image(self, image_size):
+		im = Image.new('RGB', image_size)
+		data = BytesIO()
+		im.save(data, 'JPEG')
+		return data.getvalue()
+
 	def test_library(self):
 		title = 'Test'
 		library = self.create_library()
@@ -45,10 +53,7 @@ class AttachmentModelTest(TestCase):
 
 	def test_upload_image(self):
 		image_size = (5, 10)
-		im = Image.new('RGB', image_size)
-		data = BytesIO()
-		im.save(data, 'JPEG')
-		attachment = self.create_attachment('image.jpg', data.getvalue())
+		attachment = self.create_attachment('image.jpg', self.create_image(image_size))
 		self.assertEquals(attachment.image_width, image_size[0])
 		self.assertEquals(attachment.image_height, image_size[1])
 		attachment.delete()
@@ -133,3 +138,15 @@ class AttachmentModelTest(TestCase):
 
 		for i in range(count):
 			attachments[i].delete()
+
+	def test_delete(self):
+		attachment = self.create_attachment('upload.png', self.create_image((5, 5)))
+		thumbnailer = get_thumbnailer(attachment.file)
+		thumbnail = thumbnailer.get_thumbnail({'crop': True, 'size': (1, 1)})
+
+		self.assertTrue(os.path.exists(attachment.file.path))
+		self.assertTrue(os.path.exists(thumbnail.path))
+
+		attachment.delete()
+		self.assertFalse(os.path.exists(attachment.file.path))
+		self.assertFalse(os.path.exists(thumbnail.path))
