@@ -13,6 +13,7 @@ urlpatterns = [
 	url(r'^$', example_views.IndexView.as_view(), name='home'),
 	url(r'^attachments/$', example_views.LiveUploadAttachments.as_view(), name='live_upload_attachments'),
 	url(r'^attachments-save/$', example_views.OnSaveUploadAttachments.as_view(), name='on_save_upload_attachments'),
+	url(r'^gallery/$', example_views.GalleryUpload.as_view(), name='gallery_upload'),
 ]
 
 if settings.DEBUG:

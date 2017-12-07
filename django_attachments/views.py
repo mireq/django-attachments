@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 from django.http import JsonResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.functional import cached_property
@@ -65,18 +67,18 @@ class AttachmentEditableMixin(object):
 		action = self.request.POST.get('action')
 		if action == 'upload' and self.upload_form:
 			if self.upload_form.is_valid():
-				return self.upload_form_valid()
+				return self.upload_form_valid(self.upload_form)
 			else:
-				return self.upload_form_invalid()
+				return self.upload_form_invalid(self.upload_form)
 		if action == 'update' and self.upload_form:
 			if self.update_form.is_valid():
-				return self.update_form_valid()
+				return self.update_form_valid(self.update_form)
 			else:
-				return self.update_form_invalid()
+				return self.update_form_invalid(self.update_form)
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
-	def upload_form_valid(self):
-		upload = self.upload_form.save()
+	def upload_form_valid(self, form):
+		upload = form.save()
 		self.update_primary_attachment()
 		if self.request.POST.get('attachments') == 'json':
 			attachments = self.serialize_attachemnts()
@@ -85,17 +87,21 @@ class AttachmentEditableMixin(object):
 			return JsonResponse({'attachments': attachments})
 		return HttpResponseRedirect(self.request.get_full_path())
 
-	def upload_form_invalid(self):
+	def upload_form_invalid(self, form):
+		if self.request.POST.get('attachments') == 'json':
+			return JsonResponse({'errors': json.loads(form.errors.as_json())})
 		return self.render_to_response(self.get_context_data())
 
-	def update_form_valid(self):
-		self.update_form.save()
+	def update_form_valid(self, form):
+		form.save()
 		self.update_primary_attachment()
 		if self.request.POST.get('attachments') == 'json':
 			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
 
-	def update_form_invalid(self):
+	def update_form_invalid(self, form):
+		if self.request.POST.get('attachments') == 'json':
+			return JsonResponse({'errors': json.loads(form.errors.as_json())})
 		return self.render_to_response(self.get_context_data())
 
 	def get(self, request, *args, **kwargs):

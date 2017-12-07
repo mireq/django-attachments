@@ -5,6 +5,7 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 
 from .models import Article
+from django_attachments.forms import ImageUploadForm
 from django_attachments.models import Library
 from django_attachments.views import AttachmentEditableMixin
 
@@ -37,8 +38,16 @@ class LiveUploadAttachments(AttachmentEditableMixin, GetOrCreateArticleMixin, Te
 
 
 class OnSaveUploadAttachments(AttachmentEditableMixin, GetOrCreateArticleMixin, TemplateView):
-	article_title = 'Tes2t'
+	article_title = 'Test 2'
 	template_name = 'on_save_upload_attachments.html'
 
 	def get_library(self):
 		return self.article.attachments
+
+
+class GalleryUpload(AttachmentEditableMixin, GetOrCreateArticleMixin, TemplateView):
+	template_name = 'gallery_upload.html'
+	upload_form_class = ImageUploadForm
+
+	def get_library(self):
+		return self.article.gallery
