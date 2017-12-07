@@ -8,11 +8,11 @@ from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, TemplateView
 
-from .fields import LibraryField
+from .fields import LibraryField, GalleryField
 from .forms import ImageUploadForm
 from .models import Attachment, Library
 from .views import AttachmentEditableMixin
-from .widgets import AdminAttachmentsWidget
+from .widgets import AdminLibraryWidget, AdminGalleryWidget
 
 
 class AttachmentsPermsMixin(UserPassesTestMixin):
@@ -40,8 +40,10 @@ class GalleryEditView(LibraryEditView):
 
 class AttachmentsAdminMixin(object):
 	def formfield_for_dbfield(self, db_field, request, **kwargs):
+		if isinstance(db_field, GalleryField):
+			return db_field.formfield(widget=AdminGalleryWidget, **kwargs)
 		if isinstance(db_field, LibraryField):
-			return db_field.formfield(widget=AdminAttachmentsWidget, **kwargs)
+			return db_field.formfield(widget=AdminLibraryWidget, **kwargs)
 		return super(AttachmentsAdminMixin, self).formfield_for_dbfield(db_field, request, **kwargs)
 
 

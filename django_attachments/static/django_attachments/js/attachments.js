@@ -354,10 +354,23 @@ var attachmentsContainer = function(container, widget) {
 		onChanged();
 	};
 
-	self.load = function(items) {
+	self.load = function(items, deleteNotExisting) {
+		var old = [];
+		_.forEachDict(widgets, function(id, widget) {
+			old.push(id);
+		});
 		_.forEach(items, function(item) {
 			self.add(item);
+			var idx = old.indexOf(item.id + '');
+			if (idx !== -1) {
+				old.splice(idx, 1);
+			}
 		});
+		if (deleteNotExisting) {
+			_.forEach(old, function(id) {
+				self.remove(id);
+			});
+		}
 		onChanged();
 	};
 
@@ -525,6 +538,10 @@ var uploadWidget = function(element, options) {
 	var messages = messagesContainer(messagesElement);
 	var queueSuccess;
 
+	var isPlaceholderUrl = function(url) {
+		return url.indexOf('__library_id__') !== -1;
+	};
+
 	var findId = function(element) {
 		var id;
 		while (element) {
@@ -582,6 +599,28 @@ var uploadWidget = function(element, options) {
 		_.unbindEvent(filesElement, 'click', onClicked);
 	};
 
+	self.loadAttachments = function() {
+		if (isPlaceholderUrl(self.listUrl)) {
+			attachments.load([], true);
+		}
+		else {
+			_.xhrSend({
+				url: self.listUrl,
+				successFn: function(data) {
+					attachments.load([], true);
+					if (data.attachments) {
+						if (self.updateUrl) {
+							_.forEach(data.attachments, function(attachment) {
+								attachment.deletable = true;
+							});
+						}
+						attachments.load(data.attachments);
+					}
+				}
+			});
+		}
+	};
+
 	self.save = function(success) {
 		if (dropzone === undefined) {
 			setTimeout(function() {
@@ -610,7 +649,6 @@ var uploadWidget = function(element, options) {
 			addRemoveLinks: true,
 			sending: function(file, xhr, formData) {
 				formData.append('action', 'upload');
-				formData.append('attachments', 'json');
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
 			},
 			uploadprogress: function(upload, progress) {
@@ -663,6 +701,7 @@ var uploadWidget = function(element, options) {
 				upload.previewWidget = undefined;
 			},
 			processing: function() {
+				dropzone.options.url = self.uploadUrl;
 				dropzone.options.autoProcessQueue = true;
 			},
 			addedfile: function(upload) {
@@ -689,6 +728,7 @@ var uploadWidget = function(element, options) {
 				upload.previewWidget.update({thumbnail: upload.dataURL});
 			}
 		});
+		window.dropzone = dropzone;
 		return dropzone;
 	};
 
@@ -766,25 +806,15 @@ var uploadWidget = function(element, options) {
 		});
 	};
 
-	_.xhrSend({
-		url: self.listUrl,
-		successFn: function(data) {
-			if (self.updateUrl) {
-				_.forEach(data.attachments, function(attachment) {
-					attachment.deletable = true;
-					attachment.deletable = true;
-				});
-			}
-			attachments.load(data.attachments);
-			if (self.updateUrl) {
-				sortable = createSortable();
-			}
-			if (self.uploadUrl) {
-				dropzone = createDropzone();
-			}
-			self.initialized = true;
-		}
-	});
+	attachments.load([]);
+	if (self.updateUrl) {
+		sortable = createSortable();
+	}
+	if (self.uploadUrl) {
+		dropzone = createDropzone();
+	}
+	self.initialized = true;
+	self.loadAttachments();
 
 	return self;
 };

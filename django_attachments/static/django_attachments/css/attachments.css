@@ -6,6 +6,7 @@
 	border-radius: 5px;
 	font-family: sans-serif;
 	font-size: 16px;
+	clear: both;
 }
 
 .attachments-widget.dz-clickable.empty {

@@ -1,4 +1,1 @@
-{% load i18n %}
-<div{% block parameters %}{% endblock %}>
-	<input type="text" id="{{ widget.id }}" name="{{ widget.name }}" value="{{ widget.value }}">
-</div>
+<input class="django-attachments-widget" type="text" id="{{ widget.id }}" name="{{ widget.name }}" value="{{ widget.value }}" data-list-url="{{ library_url }}" data-upload-url="{{ library_url }}" data-update-url="{{ library_url }}" data-create-library-url="{{ create_url }}">

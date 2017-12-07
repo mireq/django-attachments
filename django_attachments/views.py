@@ -80,7 +80,7 @@ class AttachmentEditableMixin(object):
 	def upload_form_valid(self, form):
 		upload = form.save()
 		self.update_primary_attachment()
-		if self.request.POST.get('attachments') == 'json':
+		if self.request.is_ajax():
 			attachments = self.serialize_attachemnts()
 			for attachment in attachments:
 				attachment['is_new'] = upload.id == attachment['id']
@@ -88,24 +88,24 @@ class AttachmentEditableMixin(object):
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def upload_form_invalid(self, form):
-		if self.request.POST.get('attachments') == 'json':
+		if self.request.is_ajax():
 			return JsonResponse({'errors': json.loads(form.errors.as_json())})
 		return self.render_to_response(self.get_context_data())
 
 	def update_form_valid(self, form):
 		form.save()
 		self.update_primary_attachment()
-		if self.request.POST.get('attachments') == 'json':
+		if self.request.is_ajax():
 			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def update_form_invalid(self, form):
-		if self.request.POST.get('attachments') == 'json':
+		if self.request.is_ajax():
 			return JsonResponse({'errors': json.loads(form.errors.as_json())})
 		return self.render_to_response(self.get_context_data())
 
 	def get(self, request, *args, **kwargs):
-		if request.GET.get('attachments') == 'json':
+		if self.request.is_ajax():
 			return self.render_json_attachments()
 		return super(AttachmentEditableMixin, self).get(request, *args, **kwargs)
 
