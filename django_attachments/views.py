@@ -9,6 +9,7 @@ from django.utils.functional import cached_property
 from easy_thumbnails.files import get_thumbnailer
 
 from .forms import AttachmentUploadForm, AttachmentUpdateFormSet
+from .utils import parse_mimetype
 
 
 class AttachmentEditableMixin(object):
@@ -75,6 +76,10 @@ class AttachmentEditableMixin(object):
 				return self.update_form_valid(self.update_form)
 			else:
 				return self.update_form_invalid(self.update_form)
+		if action == 'mimetype':
+			filename = self.request.POST.get('filename')
+			mimetype = parse_mimetype(filename)
+			return JsonResponse(mimetype)
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
 	def upload_form_valid(self, form):
@@ -119,6 +124,7 @@ class AttachmentEditableMixin(object):
 				'rank': attachment.rank,
 				'filesize': attachment.filesize,
 				'mimetype': attachment.mimetype,
+				'mimetype_url': parse_mimetype(attachment.original_name)['mimetype_url'],
 			}
 			if attachment.is_image:
 				attachment_data['image_width'] = attachment.image_width

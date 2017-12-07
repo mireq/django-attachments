@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import mimetypes
+import os
 from io import BytesIO
 
 from PIL import Image
+from django.contrib.staticfiles import finders
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.templatetags.static import static
 
 
 def resized_picture_field(self, image_field, max_image_size=None, force_image_type=None, strip_metadata=False, image_quality=70):
@@ -28,3 +32,17 @@ def resized_picture_field(self, image_field, max_image_size=None, force_image_ty
 	image_field.file = SimpleUploadedFile(image_field.name, image_file.getvalue())
 
 	return image_field
+
+
+def parse_mimetype(filename):
+	mimetype = (mimetypes.guess_type(filename)[0] or '')[:200]
+	mime_url_part = '/'.join([d for d in mimetype.split('/') if d != '..' and d != ''])
+	safe_mimetype = os.path.join(*[d for d in mimetype.split('/') if d != '..' and d != ''])
+	mime_url = 'django_attachments/img/mimetypes/%s.png' % mime_url_part
+	result = finders.find(os.path.join('django_attachments', 'img', 'mimetypes', safe_mimetype) + '.png')
+	if result is None:
+		mime_url = 'django_attachments/img/mimetypes/application/octet-stream.png'
+	return {
+		'mimetype': mimetype,
+		'mimetype_url': static(mime_url)
+	}

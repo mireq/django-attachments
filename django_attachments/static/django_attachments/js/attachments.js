@@ -441,9 +441,19 @@ var fileWidget = function(data) {
 	var renderState = function() {
 		self.element.className = 'attachment attachment-' + (state.finished ? 'finished' : 'uploading') + (state.deleted ? ' deleted' : '');
 		self.element.setAttribute('data-id', state.id);
-		elements.img.src = state.thumbnail === undefined ? 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' : state.thumbnail;
 		elements.captionSpan.innerHTML = '';
 		elements.captionSpan.appendChild(document.createTextNode(state.name));
+		if (state.thumbnail === undefined) {
+			if (state.mimetype_url === undefined) {
+				elements.img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+			}
+			else {
+				elements.img.src = state.mimetype_url;
+			}
+		}
+		else {
+			elements.img.src = state.thumbnail;
+		}
 		if (state.deletable) {
 			if (!elements.delete.parentNode) {
 				self.element.appendChild(elements.delete);
@@ -763,6 +773,19 @@ var uploadWidget = function(element, options) {
 				dropzoneUploadId++;
 
 				upload.previewWidget = attachments.add(upload.listData);
+
+				if (self.uploadUrl !== null && !isPlaceholderUrl(self.uploadUrl)) {
+					_.xhrSend({
+						url: self.uploadUrl,
+						method: 'POST',
+						data: {action: 'mimetype', filename: upload.name},
+						successFn: function(data) {
+							if (upload.previewWidget !== undefined) {
+								upload.previewWidget.update(data);
+							}
+						}
+					});
+				}
 
 				fireListeners('changed');
 				if (dropzone.options.autoProcessQueue) {
