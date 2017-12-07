@@ -326,6 +326,16 @@ var attachmentsContainer = function(container, widget) {
 		}
 	};
 
+	self.update = function(id, data) {
+		var widgetInstance = widgets[id + ''];
+		if (widgetInstance === undefined) {
+			return null;
+		}
+		widgetInstance.update(data);
+		onChanged();
+		return widgetInstance;
+	};
+
 	self.toList = function() {
 		var list = [];
 		_.forEach(container.childNodes, function(node) {
@@ -571,7 +581,7 @@ var uploadWidget = function(element, options) {
 					attachments.remove(id);
 				}
 				else {
-					widget.update({ deleted: true });
+					attachments.update(id, { deleted: true });
 					if (self.autoProcess) {
 						saveUploads();
 					}

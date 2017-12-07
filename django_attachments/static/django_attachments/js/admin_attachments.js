@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		inputs.push(input);
 	});
 	inputs.forEach(function(input) {
-		var w = uploadWidget(input);
+		var w = uploadWidget(input, {autoProcess: false});
 		updateUrls(input, w);
 		w.loadAttachments();
 	});
