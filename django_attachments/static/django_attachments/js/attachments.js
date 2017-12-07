@@ -500,13 +500,12 @@ var messagesContainer = function(element, tagName) {
 
 
 var uploadWidget = function(element, options) {
+	options = options || {};
+
 	var self = {};
 	self.initialized = false;
+	self.autoProcess = options.autoProcess === undefined ? true : options.autoProcess;
 	self.destroy = function() {};
-	options = options || {};
-	if (options.autoProcess === undefined) {
-		options.autoProcess = true;
-	}
 
 	self.listUrl = element.getAttribute('data-list-url');
 	self.uploadUrl = element.getAttribute('data-upload-url');
@@ -573,7 +572,7 @@ var uploadWidget = function(element, options) {
 				}
 				else {
 					widget.update({ deleted: true });
-					if (options.autoProcess) {
+					if (self.autoProcess) {
 						saveUploads();
 					}
 				}
@@ -693,7 +692,7 @@ var uploadWidget = function(element, options) {
 					saveUploads(queueSuccess);
 					queueSuccess = undefined;
 				}
-				if (!options.autoProcess) {
+				if (!self.autoProcess) {
 					dropzone.options.autoProcessQueue = false;
 				}
 			},
@@ -720,12 +719,14 @@ var uploadWidget = function(element, options) {
 				if (dropzone.options.autoProcessQueue) {
 					return;
 				}
-				if (options.autoProcess) {
+				if (self.autoProcess) {
 					setTimeout(function() { dropzone.processQueue(); }, 0);
 				}
 			},
 			thumbnail: function(upload, dataURL) {
-				upload.previewWidget.update({thumbnail: upload.dataURL});
+				if (upload.previewWidget !== undefined) {
+					upload.previewWidget.update({thumbnail: upload.dataURL});
+				}
 			}
 		});
 		window.dropzone = dropzone;
@@ -741,7 +742,7 @@ var uploadWidget = function(element, options) {
 				pull: false
 			},
 			onSort: function() {
-				if (options.autoProcess) {
+				if (self.autoProcess) {
 					saveUploads();
 				}
 			},
