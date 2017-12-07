@@ -31,7 +31,7 @@ class AdminLibraryWidget(forms.Widget):
 
 
 class AdminGalleryWidget(AdminLibraryWidget):
-	def get_context_data(self, name, value, attrs):
+	def get_context(self, name, value, attrs):
 		context = super(AdminGalleryWidget, self).get_context(name, value, attrs)
 		library_url = reverse('admin:attachments_gallery_edit_api', args=('0000',))
 		# hack
