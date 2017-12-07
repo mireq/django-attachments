@@ -2,11 +2,11 @@
 from __future__ import unicode_literals
 
 import mimetypes
+from io import BytesIO
 from os import path
 from uuid import uuid4
-from io import BytesIO
-from PIL import Image
 
+from PIL import Image
 from django.db import models
 from django.db.models import F, Max
 from django.utils import timezone
@@ -56,7 +56,12 @@ class Library(TimestampModelMixin, models.Model):
 		verbose_name_plural = _("Libraries")
 
 	def __str__(self):
-		return self.title
+		if self.title:
+			return self.title
+		elif self.pk:
+			return 'Library #%d' % self.pk
+		else:
+			return 'Library'
 
 
 class AttachmentQuerySet(models.QuerySet):

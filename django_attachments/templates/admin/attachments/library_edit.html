@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Attachments</title>
+	<meta charset="utf-8" />
+</head>
+<body>
+
+	<div class="attachments-upload-widget" data-list-url="{{ request.path }}?attachments=json" data-upload-url="{{ request.path }}" data-update-url="{{ request.path }}">
+
+		<h2>Upload</h2>
+
+		<form action="{{ request.path }}" method="post" enctype="multipart/form-data" class="upload-form">
+			{% csrf_token %}
+			{{ upload_form.as_p }}
+			<input type="hidden" name="action" value="upload">
+			<button type="submit">Upload</button>
+		</form>
+
+		<h2>Change</h2>
+
+		<form action="{{ request.path }}" method="post" class="update-form">
+			{% csrf_token %}
+			{{ update_form.as_p }}
+			<input type="hidden" name="action" value="update">
+			<button type="submit">Change</button>
+		</form>
+
+	</div>
+
+</body>
+</html>

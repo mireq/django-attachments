@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Create library</title>
+	<meta charset="utf-8" />
+</head>
+<body>
+
+	<form action="{{ request.path }}" method="post">
+		{% csrf_token %}
+		<button type="submit">Create</button>
+	</form>
+
+</body>
+</html>
