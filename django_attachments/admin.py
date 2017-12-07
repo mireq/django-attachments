@@ -8,9 +8,11 @@ from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, TemplateView
 
+from .fields import LibraryField
 from .forms import ImageUploadForm
 from .models import Attachment, Library
 from .views import AttachmentEditableMixin
+from .widgets import AdminAttachmentsWidget
 
 
 class AttachmentsPermsMixin(UserPassesTestMixin):
@@ -36,6 +38,13 @@ class GalleryEditView(LibraryEditView):
 	upload_form_class = ImageUploadForm
 
 
+class AttachmentsAdminMixin(object):
+	def formfield_for_dbfield(self, db_field, request, **kwargs):
+		if isinstance(db_field, LibraryField):
+			return db_field.formfield(widget=AdminAttachmentsWidget, **kwargs)
+		return super(AttachmentsAdminMixin, self).formfield_for_dbfield(db_field, request, **kwargs)
+
+
 class LibraryCreateViw(AttachmentsPermsMixin, CreateView):
 	template_name = 'admin/attachments/library_create.html'
 	model = Library
@@ -48,6 +57,7 @@ class LibraryCreateViw(AttachmentsPermsMixin, CreateView):
 
 class AttachmentsInline(admin.TabularInline):
 	model = Attachment
+	fields = ('rank',)
 
 
 class LibraryAdmin(admin.ModelAdmin):

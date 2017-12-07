@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+import django_attachments.fields
 
 
 class Migration(migrations.Migration):
@@ -20,8 +21,8 @@ class Migration(migrations.Migration):
 			fields=[
 				('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
 				('title', models.CharField(max_length=100)),
-				('attachments', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='articles_with_attachment', to='django_attachments.Library')),
-				('gallery', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='articles_with_gallery', to='django_attachments.Library')),
+				('attachments', django_attachments.fields.LibraryField(on_delete=django.db.models.deletion.CASCADE, related_name='articles_with_attachment', to='django_attachments.Library')),
+				('gallery', django_attachments.fields.GalleryField(on_delete=django.db.models.deletion.CASCADE, related_name='articles_with_gallery', to='django_attachments.Library')),
 			],
 			options={
 				'verbose_name': 'Article',
