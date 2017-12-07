@@ -2,7 +2,7 @@
 
 var updateUrls = function(input, widget) {
 	var value = input.value;
-	if (value) {
+	if (value && value !== 'None') {
 		var listUrl = input.getAttribute('data-list-url');
 		var uploadUrl = input.getAttribute('data-upload-url');
 		var updateUrl = input.getAttribute('data-update-url');
@@ -24,6 +24,7 @@ var updateUrls = function(input, widget) {
 		widget.uploadUrl = input.getAttribute('data-upload-url');
 		widget.updateUrl = input.getAttribute('data-update-url');
 	}
+	widget.createLibraryUrl = input.getAttribute('data-create-library-url');
 };
 
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -33,8 +34,28 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	});
 	inputs.forEach(function(input) {
 		var w = uploadWidget(input, {autoProcess: false});
+		var creatingGallery = false;
 		updateUrls(input, w);
 		w.loadAttachments();
+		w.onChanged(function() {
+			if (creatingGallery) {
+				return;
+			}
+			creatingGallery = true;
+			if (input.value && input.value !== 'None') {
+				w.save();
+			}
+			else {
+				w.createLibrary(function(value) {
+					if (value !== null) {
+						input.value = value;
+						updateUrls(input, w);
+						w.autoProcess = true;
+						w.save();
+					}
+				});
+			}
+		});
 	});
 });
 

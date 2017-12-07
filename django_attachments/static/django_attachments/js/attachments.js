@@ -520,6 +520,7 @@ var uploadWidget = function(element, options) {
 	self.listUrl = element.getAttribute('data-list-url');
 	self.uploadUrl = element.getAttribute('data-upload-url');
 	self.updateUrl = element.getAttribute('data-update-url');
+	self.createLibraryUrl = element.getAttribute('data-create-library-url');
 
 	if (self.listUrl === null) {
 		return self;
@@ -540,12 +541,22 @@ var uploadWidget = function(element, options) {
 	filesElement.className = 'files';
 	widgetElement.appendChild(filesElement);
 
+	var listeners = {
+		saved: [],
+		changed: []
+	};
 	var dropzone;
 	var dropzoneUploadId = 0;
 	var sortable;
 	var attachments = attachmentsContainer(filesElement, fileWidget);
 	var messages = messagesContainer(messagesElement);
 	var queueSuccess;
+
+	var fireListeners = function(event) {
+		_.forEach(listeners[event], function(listener) {
+			listener.apply(arguments);
+		});
+	};
 
 	var isPlaceholderUrl = function(url) {
 		return url.indexOf('__library_id__') !== -1;
@@ -586,6 +597,7 @@ var uploadWidget = function(element, options) {
 						saveUploads();
 					}
 				}
+				fireListeners('changed');
 			}
 			e.preventDefault();
 			return;
@@ -647,6 +659,32 @@ var uploadWidget = function(element, options) {
 				}
 			}, 0);
 		}
+	};
+
+	self.createLibrary = function(callback) {
+		if (self.createLibraryUrl === null) {
+			callback(null);
+		}
+		else {
+			_.xhrSend({
+				url: self.createLibraryUrl,
+				method: 'POST',
+				successFn: function(data) {
+					callback(data.id);
+				},
+				failFn: function() {
+					callback(null);
+				}
+			});
+		}
+	};
+
+	self.onSaved = function(callback) {
+		listeners.saved.push(callback);
+	};
+
+	self.onChanged = function(callback) {
+		listeners.changed.push(callback);
 	};
 
 	var createDropzone = function() {
@@ -726,6 +764,7 @@ var uploadWidget = function(element, options) {
 
 				upload.previewWidget = attachments.add(upload.listData);
 
+				fireListeners('changed');
 				if (dropzone.options.autoProcessQueue) {
 					return;
 				}
@@ -755,6 +794,7 @@ var uploadWidget = function(element, options) {
 				if (self.autoProcess) {
 					saveUploads();
 				}
+				fireListeners('changed');
 			},
 			onStart: function() {
 			},
@@ -811,6 +851,7 @@ var uploadWidget = function(element, options) {
 						if (success !== undefined) {
 							success();
 						}
+						fireListeners('saved');
 					}
 				});
 			}

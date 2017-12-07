@@ -43,6 +43,8 @@
 		saveButton.appendChild(document.createTextNode('Save'));
 		document.body.appendChild(saveButton);
 
+		uploadWidgetInstance.onSaved(function() { console.log('saved'); });
+		uploadWidgetInstance.onChanged(function() { console.log('changed'); });
 
 		saveButton.onclick = function() {
 			if (uploadWidgetInstance.initialized) {
