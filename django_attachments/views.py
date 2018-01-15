@@ -83,6 +83,8 @@ class AttachmentEditableMixin(object):
 		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
 
 	def upload_form_valid(self, form):
+		if not form.library.pk:
+			form.library.save()
 		upload = form.save()
 		self.update_primary_attachment()
 		if self.request.is_ajax():
