@@ -1,0 +1,72 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-17 14:31+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2);\n"
+"X-Language: sk_SK\n"
+"X-Source-Language: C\n"
+
+msgid "Attachemnts"
+msgstr "Prílohy"
+
+msgid "Image"
+msgstr "Obrázok"
+
+msgid "Created"
+msgstr "Vytvorené"
+
+msgid "Updated"
+msgstr "Aktualizované"
+
+msgid "Name"
+msgstr "Názov"
+
+msgid "Primary attachment"
+msgstr "Hlavná príloha"
+
+msgid "Library"
+msgstr "Knižnica"
+
+msgid "Libraries"
+msgstr "Knižnice"
+
+msgid "Rank"
+msgstr "Poradie"
+
+msgid "Original name"
+msgstr "Pôvodný názov"
+
+msgid "File"
+msgstr "Súbor"
+
+msgid "File size"
+msgstr "Veľkosť súboru"
+
+msgid "File type"
+msgstr "Typ súboru"
+
+msgid "Image width"
+msgstr "Šírka obrázku"
+
+msgid "Image height"
+msgstr "Výška obrázku"
+
+msgid "Attachment"
+msgstr "Príloha"
+
+msgid "Attachments"
+msgstr "Prílohy"
