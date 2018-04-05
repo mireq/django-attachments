@@ -9,6 +9,7 @@ from django.utils.functional import cached_property
 from easy_thumbnails.files import get_thumbnailer
 
 from .forms import AttachmentUploadForm, AttachmentUpdateFormSet
+from .models import Attachment
 from .utils import parse_mimetype
 
 
@@ -42,7 +43,12 @@ class AttachmentEditableMixin(object):
 		return self.get_attachment_form_kwargs('upload', library=self.get_library())
 
 	def get_update_form_kwargs(self):
-		return self.get_attachment_form_kwargs('update', queryset=self.get_library().attachment_set.all())
+		library = self.get_library()
+		if library:
+			queryset = library.attachment_set.all()
+		else:
+			queryset = Attachment.objects.none()
+		return self.get_attachment_form_kwargs('update', queryset=queryset)
 
 	@cached_property
 	def upload_form(self):
