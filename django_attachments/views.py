@@ -135,7 +135,6 @@ class AttachmentEditableMixin(object):
 			if attachment.is_image:
 				attachment_data['image_width'] = attachment.image_width
 				attachment_data['image_height'] = attachment.image_height
-				thumbnails = {}
 				thumbnailer = get_thumbnailer(attachment.file)
 				for key, options in self.thumbnail_options.items():
 					attachment_data[key] = thumbnailer.get_thumbnail(options).url
