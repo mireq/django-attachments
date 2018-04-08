@@ -147,6 +147,8 @@ class AttachmentEditableMixin(object):
 
 	def update_primary_attachment(self):
 		library = self.get_library()
+		if not library.pk:
+			return
 		library.refresh_from_db()
 		first_attachment = library.attachment_set.order_by('rank').first()
 		if library.primary_attachment != first_attachment:
