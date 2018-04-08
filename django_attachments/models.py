@@ -14,6 +14,8 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from easy_thumbnails.fields import ThumbnailerField
 
+from .utils import parse_mimetype
+
 
 class TimestampModelMixin(models.Model):
 	created = models.DateTimeField(_("Created"), editable=False, db_index=True)
@@ -120,6 +122,10 @@ class Attachment(TimestampModelMixin, models.Model):
 	@property
 	def is_image(self):
 		return self.image_width is not None
+
+	@property
+	def mimetype_info(self):
+		return parse_mimetype(self.original_name)
 
 	def save(self, *args, **kwargs):
 		if not self.original_name:
