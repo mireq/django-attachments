@@ -18,7 +18,7 @@ from .widgets import AdminLibraryWidget, AdminGalleryWidget
 class AttachmentsPermsMixin(UserPassesTestMixin):
 	def test_func(self):
 		user = self.request.user
-		if not user.is_authenticated():
+		if not user.is_authenticated:
 			return False
 		if not user.is_staff:
 			return False
