@@ -6,6 +6,7 @@ import json
 from django.http import JsonResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.functional import cached_property
+from easy_thumbnails.exceptions import EasyThumbnailsError
 from easy_thumbnails.files import get_thumbnailer
 
 from .forms import AttachmentUploadForm, AttachmentUpdateFormSet
@@ -137,7 +138,10 @@ class AttachmentEditableMixin(object):
 				attachment_data['image_height'] = attachment.image_height
 				thumbnailer = get_thumbnailer(attachment.file)
 				for key, options in self.thumbnail_options.items():
-					attachment_data[key] = thumbnailer.get_thumbnail(options).url
+					try:
+						attachment_data[key] = thumbnailer.get_thumbnail(options).url
+					except EasyThumbnailsError:
+						attachment_data[key] = None
 			attachments_data.append(attachment_data)
 		return attachments_data
 
