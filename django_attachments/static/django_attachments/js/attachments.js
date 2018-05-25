@@ -842,7 +842,7 @@ var uploadWidget = function(element, options) {
 				});
 				_.forEach(newAttachments, function(attachment) {
 					var oldAttachment = attachmentsIndex[attachment.id];
-					if (oldAttachment !== undefined) {
+					if (oldAttachment !== undefined && oldAttachment.rank === -1) {
 						oldAttachment.rank = rowNumber;
 						oldAttachment.deleted = attachment.deleted;
 						rowNumber++;
