@@ -113,7 +113,10 @@ class AttachmentEditableMixin(object):
 
 	def update_form_invalid(self, form):
 		if self.request.is_ajax():
-			return JsonResponse({'errors': json.loads(form.errors.as_json())})
+			errors = {}
+			for subform in form:
+				errors.update(json.loads(subform.errors.as_json()))
+			return JsonResponse({'errors': errors})
 		return self.render_to_response(self.get_context_data())
 
 	def get(self, request, *args, **kwargs):
