@@ -36,10 +36,14 @@ def resized_picture_field(self, image_field, max_image_size=None, force_image_ty
 
 def parse_mimetype(filename):
 	mimetype = (mimetypes.guess_type(filename)[0] or '')[:200]
-	mime_url_part = '/'.join([d for d in mimetype.split('/') if d != '..' and d != ''])
-	safe_mimetype = os.path.join(*[d for d in mimetype.split('/') if d != '..' and d != ''])
-	mime_url = 'django_attachments/img/mimetypes/%s.png' % mime_url_part
-	result = finders.find(os.path.join('django_attachments', 'img', 'mimetypes', safe_mimetype) + '.png')
+	mime_components = [d for d in mimetype.split('/') if d != '..' and d != '']
+	if mime_components:
+		mime_url_part = '/'.join(mime_components)
+		safe_mimetype = os.path.join(*mime_components)
+		mime_url = 'django_attachments/img/mimetypes/%s.png' % mime_url_part
+		result = finders.find(os.path.join('django_attachments', 'img', 'mimetypes', safe_mimetype) + '.png')
+	else:
+		result = None
 	if result is None:
 		mime_url = 'django_attachments/img/mimetypes/application/octet-stream.png'
 	return {
