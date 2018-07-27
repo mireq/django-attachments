@@ -109,6 +109,15 @@ class Attachment(TimestampModelMixin, models.Model):
 		blank=True,
 		null=True
 	)
+	title = models.CharField(
+		verbose_name=_("Name"),
+		max_length=255,
+		blank=True
+	)
+	caption = models.TextField(
+		verbose_name=_("Caption"),
+		blank=True
+	)
 
 	class Meta:
 		verbose_name = _("Attachment")
