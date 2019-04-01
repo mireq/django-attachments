@@ -125,7 +125,10 @@ class AttachmentEditableMixin(object):
 		return super(AttachmentEditableMixin, self).get(request, *args, **kwargs)
 
 	def serialize_attachemnts(self):
-		attachments = self.get_library().attachment_set.all()
+		library = self.get_library()
+		if not library or not library.pk:
+			return []
+		attachments = library.attachment_set.all()
 		attachments_data = []
 		for attachment in attachments:
 			attachment_data = {
