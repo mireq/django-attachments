@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import mimetypes
 from io import BytesIO
 from os import path
@@ -10,8 +8,7 @@ from PIL import Image
 from django.db import models
 from django.db.models import F, Max
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from easy_thumbnails.fields import ThumbnailerField
 
 from .utils import parse_mimetype
@@ -37,7 +34,6 @@ def upload_path_handler(instance, filename):
 	return path.join('attachments', "{0:02x}".format(pk % 256), str(pk), filename)
 
 
-@python_2_unicode_compatible
 class Library(TimestampModelMixin, models.Model):
 	title = models.CharField(
 		verbose_name=_("Name"),
@@ -71,7 +67,6 @@ class AttachmentQuerySet(models.QuerySet):
 		return self.filter(image_width__isnull=False)
 
 
-@python_2_unicode_compatible
 class Attachment(TimestampModelMixin, models.Model):
 	objects = AttachmentQuerySet.as_manager()
 

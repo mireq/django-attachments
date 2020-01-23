@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 
 from django.core.files.storage import get_storage_class
