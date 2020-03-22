@@ -525,6 +525,7 @@ var uploadWidget = function(element, options) {
 	var self = {};
 	self.initialized = false;
 	self.autoProcess = options.autoProcess === undefined ? true : options.autoProcess;
+	self.fileWidget = options.fileWidget || fileWidget;
 	self.destroy = function() {};
 
 	self.listUrl = element.getAttribute('data-list-url');
@@ -558,7 +559,7 @@ var uploadWidget = function(element, options) {
 	var dropzone;
 	var dropzoneUploadId = 0;
 	var sortable;
-	var attachments = attachmentsContainer(filesElement, fileWidget);
+	var attachments = attachmentsContainer(filesElement, self.fileWidget);
 	var messages = messagesContainer(messagesElement);
 	var queueSuccess;
 
@@ -896,6 +897,7 @@ var uploadWidget = function(element, options) {
 
 
 window.uploadWidget = uploadWidget;
+window.uploadWidget.fileWidget = fileWidget;
 
 
 }());
