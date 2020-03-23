@@ -586,17 +586,28 @@ var uploadWidget = function(element, options) {
 	};
 
 	var onClicked = function(e) {
+		var target = e.target;
+		var id = findId(target);
+		var widget = null;
+
+		if (options.onClick !== undefined) {
+			if (id !== null) {
+				widget = attachments.get(id);
+			}
+			if (options.onClick(e, widget) === false) {
+				return;
+			}
+		}
+
 		if (e.which !== 1) {
 			return;
 		}
 
-		var target = e.target;
 		if (target.getAttribute('data-delete') !== null) {
-			var id = findId(target);
 			if (id === null) {
 				return;
 			}
-			var widget = attachments.get(id);
+			widget = attachments.get(id);
 			if (widget !== null) {
 				if (widget.getId()[0] === ':') {
 					dropzone.removeFile(widget.getFile());
