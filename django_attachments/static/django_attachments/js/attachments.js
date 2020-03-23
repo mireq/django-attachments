@@ -489,6 +489,10 @@ var fileWidget = function(data) {
 		return stateCopy;
 	};
 
+	self.getExtraFormData = function() {
+		return {};
+	};
+
 	self.update(data);
 	renderState();
 
@@ -575,7 +579,7 @@ var uploadWidget = function(element, options) {
 
 	var findId = function(element) {
 		var id;
-		while (element) {
+		while (element && element.getAttribute !== undefined) {
 			id = element.getAttribute('data-id');
 			if (id !== null) {
 				return id;
@@ -719,6 +723,13 @@ var uploadWidget = function(element, options) {
 			sending: function(file, xhr, formData) {
 				formData.append('action', 'upload');
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
+				var extraFormData = file.previewWidget.getExtraFormData();
+				for (var key in extraFormData) {
+					if (_.has(extraFormData, key)) {
+						var value = extraFormData[key];
+						formData.append(key, value);
+					}
+				}
 			},
 			uploadprogress: function(upload, progress) {
 				upload.previewWidget.update({ progress: progress });
@@ -872,6 +883,16 @@ var uploadWidget = function(element, options) {
 					formData['form-' + rowIndex + '-id'] = attachment.id;
 					if (attachment.deleted) {
 						formData['form-' + rowIndex + '-DELETE'] = '1';
+					}
+					var widget = attachments.get(attachment.id);
+					if (widget !== null) {
+						var extraFormData = widget.getExtraFormData();
+						for (var key in extraFormData) {
+							if (_.has(extraFormData, key)) {
+								var value = extraFormData[key];
+								formData['form-' + rowIndex + '-' + key] = value;
+							}
+						}
 					}
 				});
 				formData['form-INITIAL_FORMS'] = rowNumber;
