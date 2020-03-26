@@ -163,9 +163,9 @@ class Attachment(TimestampModelMixin, models.Model):
 			self.image_height = None
 		super(Attachment, self).save(*args, **kwargs)
 
-	def delete(self):
+	def delete(self, *args, **kwargs):
 		self._rank_queryset().filter(rank__gt=self.rank).update(rank=F('rank')-1)
-		super(Attachment, self).delete()
+		super(Attachment, self).delete(*args, **kwargs)
 
 	def move_to(self, position):
 		if position == self.rank:
