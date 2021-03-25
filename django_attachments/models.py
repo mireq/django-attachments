@@ -22,7 +22,7 @@ class TimestampModelMixin(models.Model):
 		self.updated = timezone.now()
 		if not self.id and not self.created:
 			self.created = self.updated
-		return super(TimestampModelMixin, self).save(*args, **kwargs)
+		return super().save(*args, **kwargs)
 
 	class Meta:
 		abstract = True
@@ -165,11 +165,11 @@ class Attachment(TimestampModelMixin, models.Model):
 			self.filesize = -1
 			self.image_width = None
 			self.image_height = None
-		super(Attachment, self).save(*args, **kwargs)
+		return super().save(*args, **kwargs)
 
 	def delete(self, *args, **kwargs):
 		self._rank_queryset().filter(rank__gt=self.rank).update(rank=F('rank')-1)
-		super(Attachment, self).delete(*args, **kwargs)
+		return super().delete(*args, **kwargs)
 
 	def move_to(self, position):
 		if position == self.rank:

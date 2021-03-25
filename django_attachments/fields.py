@@ -15,12 +15,12 @@ class LibraryField(models.ForeignKey):
 	description = "Attachments"
 
 	def __init__(self, to='django_attachments.Library', *args, **kwargs):
-		super(LibraryField, self).__init__(to, *args, **kwargs)
+		super().__init__(to, *args, **kwargs)
 
 	def formfield(self, **kwargs):
 		defaults = {'form_class': LibraryFormField}
 		defaults.update(kwargs)
-		return super(LibraryField, self).formfield(**defaults)
+		return super().formfield(**defaults)
 
 
 class GalleryField(LibraryField):
@@ -29,4 +29,4 @@ class GalleryField(LibraryField):
 	def formfield(self, **kwargs):
 		defaults = {'form_class': GalleryFormField}
 		defaults.update(kwargs)
-		return super(GalleryField, self).formfield(**defaults)
+		return super().formfield(**defaults)

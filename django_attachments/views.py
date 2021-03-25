@@ -64,7 +64,7 @@ class AttachmentEditableMixin(object):
 			return None
 
 	def get_context_data(self, **kwargs):
-		ctx = super(AttachmentEditableMixin, self).get_context_data(**kwargs)
+		ctx = super().get_context_data(**kwargs)
 		ctx['upload_form'] = self.upload_form
 		ctx['update_form'] = self.update_form
 		return ctx
@@ -85,7 +85,7 @@ class AttachmentEditableMixin(object):
 			filename = self.request.POST.get('filename')
 			mimetype = parse_mimetype(filename)
 			return JsonResponse(mimetype)
-		return super(AttachmentEditableMixin, self).post(request, *args, **kwargs)
+		return super().post(request, *args, **kwargs)
 
 	def upload_form_valid(self, form):
 		upload = form.save()
@@ -120,7 +120,7 @@ class AttachmentEditableMixin(object):
 	def get(self, request, *args, **kwargs):
 		if self.request.is_ajax():
 			return self.render_json_attachments()
-		return super(AttachmentEditableMixin, self).get(request, *args, **kwargs)
+		return super().get(request, *args, **kwargs)
 
 	def serialize_attachemnts(self):
 		library = self.get_library()

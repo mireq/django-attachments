@@ -9,14 +9,14 @@ from .models import Attachment
 class AttachmentUploadForm(forms.ModelForm):
 	def __init__(self, *args, **kwargs):
 		self.library = kwargs.pop('library')
-		super(AttachmentUploadForm, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 	class Meta:
 		model = Attachment
 		fields = ('file',)
 
 	def save(self, commit=True):
-		obj = super(AttachmentUploadForm, self).save(commit=False)
+		obj = super().save(commit=False)
 		obj.library = self.library
 		if commit:
 			obj.save()
@@ -38,7 +38,7 @@ class AttachmentUpdateForm(forms.ModelForm):
 		fields = ()
 
 	def save(self, commit=True):
-		obj = super(AttachmentUpdateForm, self).save(commit=False)
+		obj = super().save(commit=False)
 		old_rank = obj.rank
 		obj.rank = self.cleaned_data['ORDER'] - 1
 		if commit:

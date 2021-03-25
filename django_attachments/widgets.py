@@ -18,7 +18,7 @@ class AdminLibraryWidget(forms.Widget):
 		)
 
 	def get_context(self, name, value, attrs):
-		context = super(AdminLibraryWidget, self).get_context(name, value, attrs)
+		context = super().get_context(name, value, attrs)
 		create_url = reverse('admin:attachments_library_create_api')
 		library_url = reverse('admin:attachments_library_edit_api', args=('0000',))
 		# hack
@@ -30,7 +30,7 @@ class AdminLibraryWidget(forms.Widget):
 
 class AdminGalleryWidget(AdminLibraryWidget):
 	def get_context(self, name, value, attrs):
-		context = super(AdminGalleryWidget, self).get_context(name, value, attrs)
+		context = super().get_context(name, value, attrs)
 		library_url = reverse('admin:attachments_gallery_edit_api', args=('0000',))
 		# hack
 		library_url = library_url.replace('0000', '__library_id__')

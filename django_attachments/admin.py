@@ -42,7 +42,7 @@ class AttachmentsAdminMixin(object):
 			return db_field.formfield(widget=AdminGalleryWidget, **kwargs)
 		if isinstance(db_field, LibraryField):
 			return db_field.formfield(widget=AdminLibraryWidget, **kwargs)
-		return super(AttachmentsAdminMixin, self).formfield_for_dbfield(db_field, request, **kwargs)
+		return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
 class LibraryCreateViw(AttachmentsPermsMixin, CreateView):
@@ -65,7 +65,7 @@ class LibraryAdmin(admin.ModelAdmin):
 	raw_id_fields = ('primary_attachment',)
 
 	def get_urls(self):
-		urlpatterns = super(LibraryAdmin, self).get_urls()
+		urlpatterns = super().get_urls()
 		urlpatterns = [
 			path('api/create/', LibraryCreateViw.as_view(), name='attachments_library_create_api'),
 			path('api/attachments/(?P<int:pk>\d+)/', LibraryEditView.as_view(), name='attachments_library_edit_api'),
