@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, TemplateView
+from django.urls import path
 
 from .fields import LibraryField, GalleryField
 from .forms import ImageUploadForm
@@ -67,9 +67,9 @@ class LibraryAdmin(admin.ModelAdmin):
 	def get_urls(self):
 		urlpatterns = super(LibraryAdmin, self).get_urls()
 		urlpatterns = [
-			url(r'^api/create/$', LibraryCreateViw.as_view(), name='attachments_library_create_api'),
-			url(r'^api/attachments/(?P<pk>\d+)/$', LibraryEditView.as_view(), name='attachments_library_edit_api'),
-			url(r'^api/gallery/(?P<pk>\d+)/$', GalleryEditView.as_view(), name='attachments_gallery_edit_api'),
+			path('api/create/', LibraryCreateViw.as_view(), name='attachments_library_create_api'),
+			path('api/attachments/(?P<int:pk>\d+)/', LibraryEditView.as_view(), name='attachments_library_edit_api'),
+			path('api/gallery/(?P<int:pk>\d+)/', GalleryEditView.as_view(), name='attachments_gallery_edit_api'),
 		] + urlpatterns
 		return urlpatterns
 
