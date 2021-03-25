@@ -68,8 +68,8 @@ class LibraryAdmin(admin.ModelAdmin):
 		urlpatterns = super().get_urls()
 		urlpatterns = [
 			path('api/create/', LibraryCreateViw.as_view(), name='attachments_library_create_api'),
-			path('api/attachments/(?P<int:pk>\d+)/', LibraryEditView.as_view(), name='attachments_library_edit_api'),
-			path('api/gallery/(?P<int:pk>\d+)/', GalleryEditView.as_view(), name='attachments_gallery_edit_api'),
+			path('api/attachments/<int:pk>/', LibraryEditView.as_view(), name='attachments_library_edit_api'),
+			path('api/gallery/<int:pk>/', GalleryEditView.as_view(), name='attachments_gallery_edit_api'),
 		] + urlpatterns
 		return urlpatterns
 
