@@ -9,7 +9,7 @@ from easy_thumbnails.files import get_thumbnailer
 
 from .forms import AttachmentUploadForm, AttachmentUpdateFormSet
 from .models import Attachment
-from .utils import parse_mimetype
+from .utils import parse_mimetype, check_ajax
 
 
 class AttachmentEditableMixin(object):
@@ -90,7 +90,7 @@ class AttachmentEditableMixin(object):
 	def upload_form_valid(self, form):
 		upload = form.save()
 		self.update_primary_attachment()
-		if self.request.is_ajax():
+		if check_ajax(self.request):
 			attachments = self.serialize_attachemnts()
 			for attachment in attachments:
 				attachment['is_new'] = upload.id == attachment['id']
@@ -98,19 +98,19 @@ class AttachmentEditableMixin(object):
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def upload_form_invalid(self, form):
-		if self.request.is_ajax():
+		if check_ajax(self.request):
 			return JsonResponse({'errors': json.loads(form.errors.as_json())})
 		return self.render_to_response(self.get_context_data())
 
 	def update_form_valid(self, form):
 		form.save()
 		self.update_primary_attachment()
-		if self.request.is_ajax():
+		if check_ajax(self.request):
 			return self.render_json_attachments()
 		return HttpResponseRedirect(self.request.get_full_path())
 
 	def update_form_invalid(self, form):
-		if self.request.is_ajax():
+		if check_ajax(self.request):
 			errors = {}
 			for subform in form:
 				errors.update(json.loads(subform.errors.as_json()))
@@ -118,7 +118,7 @@ class AttachmentEditableMixin(object):
 		return self.render_to_response(self.get_context_data())
 
 	def get(self, request, *args, **kwargs):
-		if self.request.is_ajax():
+		if check_ajax(self.request):
 			return self.render_json_attachments()
 		return super().get(request, *args, **kwargs)
 

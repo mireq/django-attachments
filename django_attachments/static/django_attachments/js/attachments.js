@@ -1,6 +1,5 @@
 (function() {
 
-
 /* === Utils === */
 
 
@@ -183,6 +182,10 @@ if (_.xhrSend === undefined) {
 		req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 		if (options.method === 'POST') {
 			req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		}
+
+		for (var header in extraHeaders) {
+			req.setRequestHeader(header, extraHeaders[header]);
 		}
 
 		req.onreadystatechange = function () {
@@ -653,6 +656,9 @@ var uploadWidget = function(element, options) {
 		else {
 			_.xhrSend({
 				url: self.listUrl,
+				extraHeaders: {
+					'Accept': 'application/json',
+				},
 				successFn: function(data) {
 					attachments.load([], true);
 					if (data.attachments) {
@@ -695,6 +701,9 @@ var uploadWidget = function(element, options) {
 			_.xhrSend({
 				url: self.createLibraryUrl,
 				method: 'POST',
+				extraHeaders: {
+					'Accept': 'application/json',
+				},
 				successFn: function(data) {
 					callback(data.id);
 				},
@@ -723,6 +732,7 @@ var uploadWidget = function(element, options) {
 			sending: function(file, xhr, formData) {
 				formData.append('action', 'upload');
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
+				xhr.setRequestHeader('Accept', 'applicaton/json');
 				var extraFormData = file.previewWidget.getExtraFormData();
 				for (var key in extraFormData) {
 					if (_.has(extraFormData, key)) {
@@ -802,6 +812,9 @@ var uploadWidget = function(element, options) {
 						url: self.uploadUrl,
 						method: 'POST',
 						data: {action: 'mimetype', filename: upload.name},
+						extraHeaders: {
+							'Accept': 'application/json',
+						},
 						successFn: function(data) {
 							if (upload.previewWidget !== undefined) {
 								upload.previewWidget.update(data);
@@ -853,6 +866,9 @@ var uploadWidget = function(element, options) {
 	var saveUploads = function(success) {
 		_.xhrSend({
 			url: self.listUrl,
+			extraHeaders: {
+				'Accept': 'application/json',
+			},
 			successFn: function(data) {
 				var oldAttachments = data.attachments;
 				var newAttachments = attachments.toList();
@@ -903,6 +919,9 @@ var uploadWidget = function(element, options) {
 					method: 'POST',
 					data: formData,
 					url: self.updateUrl,
+					extraHeaders: {
+						'Accept': 'application/json',
+					},
 					successFn: function(data) {
 						if (success !== undefined) {
 							success();

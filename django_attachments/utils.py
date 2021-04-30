@@ -9,7 +9,19 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.templatetags.static import static
 
 
-def resized_picture_field(self, image_field, max_image_size=None, force_image_type=None, strip_metadata=False, image_quality=70):
+def check_ajax(request):
+	if not hasattr(request, '_django_attachments_ajax'):
+		accept = request.META.get('HTTP_ACCEPT')
+		accept_types = set(
+			mime.split(';')[0].strip()
+			for mime in accept.split(',')
+			if mime.split(';')[0].strip()
+		)
+		request._django_attachments_ajax = 'application/json' in accept_types
+	return request._django_attachments_ajax
+
+
+def resized_picture_field(self, image_field, max_image_size=None, force_image_type=None, strip_metadata=False, image_quality=70): # pylint: disable=unused_argument
 	if max_image_size is None and force_image_type is None:
 		return image_field
 	image_file = BytesIO(image_field.read())
