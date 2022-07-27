@@ -539,6 +539,8 @@ var uploadWidget = function(element, options) {
 	self.uploadUrl = element.getAttribute('data-upload-url');
 	self.updateUrl = element.getAttribute('data-update-url');
 	self.createLibraryUrl = element.getAttribute('data-create-library-url');
+	self.librarySign = undefined;
+	self.librarySignName = undefined;
 
 	if (self.listUrl === null) {
 		return self;
@@ -568,7 +570,7 @@ var uploadWidget = function(element, options) {
 	var sortable;
 	var attachments = attachmentsContainer(filesElement, self.fileWidget);
 	var messages = messagesContainer(messagesElement);
-	var queueSuccess;
+	var queueSuccessCallback;
 
 	var fireListeners = function(event) {
 		_.forEach(listeners[event], function(listener) {
@@ -674,20 +676,46 @@ var uploadWidget = function(element, options) {
 		}
 	};
 
-	self.save = function(success) {
+	self.save = function(successCallback) {
 		if (dropzone === undefined) {
 			setTimeout(function() {
-				saveUploads(success);
+				saveUploads(successCallback);
 			}, 0);
 		}
 		else {
 			setTimeout(function() {
 				if (dropzone.getQueuedFiles().length || dropzone.getUploadingFiles().length) {
-					queueSuccess = success;
-					dropzone.processQueue();
+					_.xhrSend({
+						url: self.uploadUrl,
+						method: 'POST',
+						data: {action: 'get_library'},
+						extraHeaders: {
+							'Accept': 'application/json',
+						},
+						successFn: function(data) {
+							if (data && data.sign) {
+								self.librarySign = data.sign;
+								self.librarySignName = 'attachment_' + data.name;
+								var hiddenInput = document.getElementById('id_' + self.librarySignName);
+								if (hiddenInput === null) {
+									hiddenInput = document.createElement('input');
+									hiddenInput.setAttribute('id', 'id_' + self.librarySignName);
+									hiddenInput.setAttribute('name', self.librarySignName);
+									element.appendChild(hiddenInput);
+								}
+								hiddenInput.value = data.sign;
+							}
+							queueSuccessCallback = successCallback;
+							dropzone.processQueue();
+						},
+						failFn: function() {
+							queueSuccessCallback = successCallback;
+							dropzone.processQueue();
+						}
+					});
 				}
 				else {
-					saveUploads(success);
+					saveUploads(successCallback);
 				}
 			}, 0);
 		}
@@ -732,6 +760,9 @@ var uploadWidget = function(element, options) {
 			sending: function(file, xhr, formData) {
 				formData.append('action', 'upload');
 				formData.append('csrfmiddlewaretoken', _.getCookie('csrftoken'));
+				if (self.librarySign !== undefined) {
+					formData.append(self.librarySignName, self.librarySign);
+				}
 				xhr.setRequestHeader('Accept', 'applicaton/json');
 				var extraFormData = file.previewWidget.getExtraFormData();
 				for (var key in extraFormData) {
@@ -780,8 +811,8 @@ var uploadWidget = function(element, options) {
 			},
 			queuecomplete: function() {
 				if (self.updateUrl !== null) {
-					saveUploads(queueSuccess);
-					queueSuccess = undefined;
+					saveUploads(queueSuccessCallback);
+					queueSuccessCallback = undefined;
 				}
 				if (!self.autoProcess) {
 					dropzone.options.autoProcessQueue = false;
@@ -863,7 +894,7 @@ var uploadWidget = function(element, options) {
 		return sortable;
 	};
 
-	var saveUploads = function(success) {
+	var saveUploads = function(successCallback) {
 		_.xhrSend({
 			url: self.listUrl,
 			extraHeaders: {
@@ -923,8 +954,8 @@ var uploadWidget = function(element, options) {
 						'Accept': 'application/json',
 					},
 					successFn: function(data) {
-						if (success !== undefined) {
-							success();
+						if (successCallback !== undefined) {
+							successCallback();
 						}
 						fireListeners('saved');
 					}
