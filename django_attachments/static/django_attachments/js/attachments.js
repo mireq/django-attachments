@@ -895,8 +895,13 @@ var uploadWidget = function(element, options) {
 	};
 
 	var saveUploads = function(successCallback) {
+		var listUrl = self.listUrl;
+		if (self.librarySign !== undefined) {
+			var separator = listUrl.indexOf('?') === -1 ? '?' : '&';
+			listUrl += separator + encodeURIComponent(self.librarySignName) + '=' + encodeURIComponent(self.librarySign);
+		}
 		_.xhrSend({
-			url: self.listUrl,
+			url: listUrl,
 			extraHeaders: {
 				'Accept': 'application/json',
 			},
@@ -946,6 +951,9 @@ var uploadWidget = function(element, options) {
 				formData['form-TOTAL_FORMS'] = rowNumber;
 				formData['form-MAX_NUM_FORMS'] = 1000;
 				formData['form-MIN_NUM_FORMS'] = 0;
+				if (self.librarySign !== undefined) {
+					formData[self.librarySignName] = self.librarySign;
+				}
 				_.xhrSend({
 					method: 'POST',
 					data: formData,
