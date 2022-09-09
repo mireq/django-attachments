@@ -21,7 +21,7 @@ def check_ajax(request):
 	return request._django_attachments_ajax
 
 
-def resized_picture_field(self, image_field, max_image_size=None, force_image_type=None, strip_metadata=False, image_quality=70): # pylint: disable=unused_argument
+def resized_picture_field(self, image_field, max_image_size=None, force_image_type=None, strip_metadata=False, image_quality=70): # pylint: disable=unused-argument
 	if max_image_size is None and force_image_type is None:
 		return image_field
 	image_file = BytesIO(image_field.read())
