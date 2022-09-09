@@ -11,7 +11,7 @@ from django.templatetags.static import static
 
 def check_ajax(request):
 	if not hasattr(request, '_django_attachments_ajax'):
-		accept = request.META.get('HTTP_ACCEPT')
+		accept = request.META.get('HTTP_ACCEPT', '')
 		accept_types = set(
 			mime.split(';')[0].strip()
 			for mime in accept.split(',')
