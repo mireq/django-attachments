@@ -51,7 +51,6 @@ Use `AttachmentsAdminMixin` to enable attachments in admin interface.
 
 	admin.site.register(Article, ArticleAdmin)
 
-
 Screenshots
 -----------
 
