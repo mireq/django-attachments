@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from django.http.response import HttpResponse
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
-
-from .models import Article
 from django_attachments.forms import ImageUploadForm
 from django_attachments.models import Library
 from django_attachments.views import AttachmentEditableMixin
+
+from .models import Article
 
 
 class IndexView(TemplateView):
@@ -41,6 +42,13 @@ class OnSaveUploadAttachments(AttachmentEditableMixin, GetOrCreateArticleMixin, 
 
 	def get_library(self):
 		return self.article.attachments
+
+	def post(self, request):
+		action = self.request.POST.get('action')
+		if action not in ('upload', 'update', 'mimetype'):
+			return HttpResponse('')
+		return super().post(request)
+
 
 
 class GalleryUpload(AttachmentEditableMixin, GetOrCreateArticleMixin, TemplateView):
