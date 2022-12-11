@@ -1,40 +1,24 @@
 # -*- coding: utf-8 -*-
+import glob
+import pathlib
+import subprocess
+import sys
 
-import os
 from setuptools import setup
 
-README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
-def get_packages(package):
-	return [dirpath
-		for dirpath, dirnames, filenames in os.walk(package)
-		if os.path.exists(os.path.join(dirpath, '__init__.py'))]
+def create_mo_files():
+	prefix = pathlib.Path('wtextra') / 'delivery_zasielkovna'
 
+	for po_file in glob.glob(str(pathlib.Path(prefix) / 'locale' / '*' / 'LC_MESSAGES' / 'django.po')):
+		sys.stdout.write(f"Compiling {po_file}")
+		compiled = subprocess.check_output(['msgfmt', '--check-format', po_file, '-o', '-'])
+		sys.stdout.write(" .. OK\n")
+		with open(po_file[:-3] + '.mo', 'wb') as fp:
+			fp.write(compiled)
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-	name='django-attachments',
-	version='0.1',
-	packages=get_packages('django_attachments'),
-	include_package_data=True,
-	license='BSD License',
-	description='Django attachments',
-	long_description=README,
-	url='https://github.com/mireq/django-attachments',
-	author='Miroslav Bendik',
-	author_email='miroslav.bendik@gmail.com',
-	classifiers=[
-		'Environment :: Web Environment',
-		'Framework :: Django',
-		'Intended Audience :: Developers',
-		'License :: OSI Approved :: BSD License',
-		'Operating System :: OS Independent',
-		'Programming Language :: Python',
-		'Programming Language :: Python :: 3',
-		'Topic :: Internet :: WWW/HTTP',
-		'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-	],
+	data_files=create_mo_files(),
+	use_scm_version=True,
 )
-

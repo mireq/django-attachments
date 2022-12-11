@@ -1,0 +1,43 @@
+[project]
+name = "django_attachments_management"
+description = "Attachments management app for django"
+readme = "README.rst"
+requires-python = ">=3.7"
+keywords = ["pylibmc", "django"]
+license = {text = "MIT"}
+dynamic = ["version"]
+authors = [
+	{ name = "Miroslav Bendík", email = "miroslav.bendik@gmail.com" }
+]
+classifiers = [
+	"Programming Language :: Python :: 3",
+]
+dependencies = ["django", "easy_thumbnails"]
+
+[project.urls]
+homepage = "https://github.com/mireq/django-attachments"
+documentation = "https://github.com/mireq/django-attachments"
+repository = "https://github.com/mireq/django-attachments"
+changelog = "https://github.com/mireq/django-attachments/blob/master/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+	"pylint",
+	"pre-commit",
+	"bump2version",
+	"commitizen"
+]
+
+[build-system]
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ['django_attachments']
+
+[tool.setuptools_scm]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.0"
+tag_format = "$version"

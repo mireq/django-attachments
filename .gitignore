@@ -2,6 +2,9 @@ db.sqlite3
 *.pyc
 *.mo
 __pycache__
+/dist
+/build
 /static_assets/*
 /django_attachments.egg-info/
+/django_attachments_management.egg-info/
 !/static_assets/.keep
