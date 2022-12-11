@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
+from django.core import signing
 from django.http import JsonResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.functional import cached_property
@@ -27,6 +28,9 @@ class AttachmentEditableMixin(object):
 
 	def get_library(self):
 		raise NotImplementedError
+
+	def get_gallery_field_name(self):
+		return 'gallery'
 
 	def get_attachment_form_kwargs(self, action, **extra_kwargs):
 		kwargs = {}
@@ -85,6 +89,13 @@ class AttachmentEditableMixin(object):
 			filename = self.request.POST.get('filename')
 			mimetype = parse_mimetype(filename)
 			return JsonResponse(mimetype)
+		if action == 'get_library':
+			lib = self.get_library()
+			if lib.pk is None:
+				lib.save()
+			field_name = self.get_gallery_field_name()
+			signer = signing.Signer(salt='attachment_' + field_name)
+			return JsonResponse({'id': lib.pk, 'name': field_name, 'sign': signer.sign(str(lib.pk))})
 		return super().post(request, *args, **kwargs)
 
 	def upload_form_valid(self, form):
