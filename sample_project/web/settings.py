@@ -47,6 +47,9 @@ TEMPLATES = [
 				'django.template.loaders.filesystem.Loader',
 				'django.template.loaders.app_directories.Loader',
 			],
+			'builtins': [
+				'django.templatetags.static',
+			]
 		},
 	},
 ]
@@ -66,8 +69,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = False
-
-USE_L10N = False
 
 USE_TZ = False
 
