@@ -2,6 +2,8 @@
 Django attachments
 ==================
 
+|version| |downloads| |license|
+
 Django application to manage attached files to any django model.
 
 Install
@@ -50,8 +52,16 @@ Use `AttachmentsAdminMixin` to enable attachments in admin interface.
 	admin.site.register(Article, ArticleAdmin)
 
 
-
 Screenshots
 -----------
 
 .. image:: https://raw.github.com/wiki/mireq/django-attachments/django_attachments.png?v2022-12-11
+
+.. |version| image:: https://badge.fury.io/py/django-attachments-management.svg
+	:target: https://pypi.python.org/pypi/django-attachments-management/
+
+.. |downloads| image:: https://img.shields.io/pypi/dw/django-attachments-management.svg
+	:target: https://pypi.python.org/pypi/django-attachments-management/
+
+.. |license| image:: https://img.shields.io/pypi/l/django-attachments-management.svg
+	:target: https://pypi.python.org/pypi/django-attachments-management/
