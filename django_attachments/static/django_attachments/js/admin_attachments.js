@@ -84,8 +84,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 						input.value = value;
 						updateUrls(input, w);
 						saveAttachments();
-						w.autoProcess = true;
-						w.save();
 					}
 				});
 			}
