@@ -145,6 +145,7 @@ class AttachmentEditableMixin(object):
 				'name': attachment.original_name,
 				'rank': attachment.rank,
 				'filesize': attachment.filesize,
+				'url': attachment.file.url,
 				'mimetype': attachment.mimetype,
 				'mimetype_url': parse_mimetype(attachment.original_name)['mimetype_url'],
 			}
