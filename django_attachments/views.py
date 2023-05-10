@@ -47,7 +47,7 @@ class AttachmentEditableMixin(object):
 
 	def get_update_form_kwargs(self):
 		library = self.get_library()
-		if library:
+		if library and library.pk:
 			queryset = library.attachment_set.all()
 		else:
 			queryset = Attachment.objects.none()
