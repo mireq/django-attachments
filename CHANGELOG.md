@@ -1,3 +1,9 @@
+## 1.1.1 (2023-05-10)
+
+### Fix
+
+- Access attachment_set relation only on saved objects
+
 ## 1.1.0 (2023-02-04)
 
 ### Feat
