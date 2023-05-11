@@ -122,7 +122,9 @@ class Attachment(TimestampModelMixin, models.Model):
 		verbose_name = _("Attachment")
 		verbose_name_plural = _("Attachments")
 		ordering = ('-library', 'rank')
-		index_together = (('library', 'rank',),)
+		indexes = [
+			models.Index(fields=['library', 'rank'])
+		]
 
 	def __str__(self):
 		return self.original_name
