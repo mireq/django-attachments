@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from PIL import Image
 from django.db import models
-from django.db.models import F, Max
+from django.db.models import F, Max, Subquery, OuterRef
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from easy_thumbnails.fields import ThumbnailerField
@@ -34,7 +34,19 @@ def upload_path_handler(instance, filename):
 	return path.join('attachments', "{0:02x}".format(pk % 256), str(pk), filename)
 
 
+class LibraryQuerySet(models.QuerySet):
+	def update_primary_image(self):
+		# Subquery to get the primary attachment for each library by lowest rank
+		primary_attachment = Subquery(Attachment.objects
+			.filter(library=OuterRef('pk'))
+			.order_by('rank')
+			.values('pk')[:1])
+		return self.update(primary_attachment=primary_attachment)
+
+
 class Library(TimestampModelMixin, models.Model):
+	objects = LibraryQuerySet.as_manager()
+
 	title = models.CharField(
 		verbose_name=_("Name"),
 		max_length=255,
