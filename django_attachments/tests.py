@@ -148,3 +148,12 @@ class AttachmentModelTest(TestCase):
 		attachment.delete()
 		self.assertFalse(os.path.exists(attachment.file.path))
 		self.assertFalse(os.path.exists(thumbnail.path))
+
+	def test_update_library(self):
+		library = self.create_library()
+		attachment = self.create_attachment('upload.txt', '', library=library)
+		library.refresh_from_db()
+		self.assertIsNone(library.primary_attachment)
+		Library.objects.filter(pk=library.pk).update_primary_image()
+		library.refresh_from_db()
+		self.assertEqual(library.primary_attachment, attachment)
