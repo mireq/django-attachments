@@ -1,3 +1,15 @@
+## 1.2.0 (2024-05-15)
+
+### Feat
+
+- Add LibraryQuerySet.update_primary_image() method
+
+## 1.1.2 (2023-05-11)
+
+### Refactor
+
+- Replaced index_together with indexes
+
 ## 1.1.1 (2023-05-10)
 
 ### Fix
