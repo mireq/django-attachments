@@ -89,11 +89,22 @@
 			}
 
 			saveAllWidgets(widgets, inputs).then(() => {
+				var hiddenInput;
 				if (btn !== null) {
 					btn.disabled = false;
+					var buttonName = btn.getAttribute('name');
+					if (buttonName !== null) {
+						hiddenInput = document.createElement('input');
+						hiddenInput.setAttribute('type', 'hidden');
+						hiddenInput.setAttribute('name', buttonName);
+						hiddenInput.setAttribute('value', btn.value);
+						form.appendChild(hiddenInput);
+					}
 				}
-				interceptSubmit = false;
 				form.submit();
+				if (hiddenInput !== undefined) {
+					form.removeChild(hiddenInput);
+				}
 			}).catch((error) => {
 				console.error('Error saving widgets:', error);
 				if (btn !== null) {
