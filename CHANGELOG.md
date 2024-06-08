@@ -1,3 +1,14 @@
+## 1.2.1 (2024-06-08)
+
+### Feat
+
+- Add missing submitter input to form
+- Added DEFAULT_AUTO_FIELD setting to sample project
+
+### Fix
+
+- Stretch drop widget to full width
+
 ## 1.2.0 (2024-05-15)
 
 ### Feat
