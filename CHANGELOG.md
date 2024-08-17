@@ -1,3 +1,9 @@
+## 1.2.2 (2024-08-17)
+
+### Fix
+
+- Don't throw error if attachment without associated file is saved
+
 ## 1.2.1 (2024-06-08)
 
 ### Feat
