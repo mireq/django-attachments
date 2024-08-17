@@ -165,8 +165,11 @@ class Attachment(TimestampModelMixin, models.Model):
 		else:
 			if self.pk is None:
 				self._rank_queryset().filter(rank__gte=self.rank).update(rank=F('rank')+1)
-		if self.file:
+		try:
 			self.filesize = self.file.size
+		except Exception:
+			self.filesize = -1
+		if self.file and self.filesize >= 0:
 			source = BytesIO(self.file.read())
 			try:
 				image = Image.open(source)
