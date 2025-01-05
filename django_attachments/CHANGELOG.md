@@ -1,3 +1,38 @@
+## 1.2.4 (2025-01-05)
+
+### Fix
+
+- Replaced old get_storage_class with get_storage utility from easy_thumbnails
+
+## 1.2.3 (2025-01-05)
+
+### Fix
+
+- Compatibility with django 5.1
+
+## 1.2.2 (2024-08-17)
+
+### Fix
+
+- Don't throw error if attachment without associated file is saved
+
+## 1.2.1 (2024-06-08)
+
+### Feat
+
+- Add missing submitter input to form
+- Added DEFAULT_AUTO_FIELD setting to sample project
+
+### Fix
+
+- Stretch drop widget to full width
+
+## 1.2.0 (2024-05-15)
+
+### Feat
+
+- Add LibraryQuerySet.update_primary_image() method
+
 ## 1.1.2 (2023-05-11)
 
 ### Refactor
