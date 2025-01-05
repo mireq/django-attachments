@@ -53,8 +53,8 @@ class Migration(migrations.Migration):
 			name='library',
 			field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='django_attachments.Library', verbose_name='Library'),
 		),
-		migrations.AlterIndexTogether(
-			name='attachment',
-			index_together=set([('library', 'rank')]),
+		migrations.AddIndex(
+			model_name='attachment',
+			index=models.Index(fields=['library', 'rank'], name='django_atta_library_9d0164_idx'),
 		),
 	]
