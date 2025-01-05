@@ -1,3 +1,9 @@
+## 1.2.3 (2025-01-05)
+
+### Fix
+
+- Compatibility with django 5.1
+
 ## 1.2.2 (2024-08-17)
 
 ### Fix
